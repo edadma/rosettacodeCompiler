@@ -1,4 +1,4 @@
-package xyz.hyperreal._scala_native
+package xyz.hyperreal.rosettacodeCompiler
 
 object Main extends App {
 
