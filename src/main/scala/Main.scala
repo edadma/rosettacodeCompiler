@@ -10,5 +10,11 @@ object Main extends App {
   val data    = mutable.IndexedSeq[Int]()
   val strings = IndexedSeq("Hello world!\n")
 
-  new VirtualMachine(code, data, strings).run
+  new VirtualMachine(code, 0, strings).run
+
+//  VirtualMachine.loadFromString("""
+//      |Datasize: 1 Strings: 2
+//      |"count is: "
+//      |"\n"
+//      |""".trim.stripMargin)
 }

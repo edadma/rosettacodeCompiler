@@ -1,4 +1,4 @@
-name := "-scala-native"
+name := "rosettacodeCompiler"
 
 version := "0.1.0"
 
@@ -29,6 +29,7 @@ libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.1" % "test"
 testFrameworks += new TestFramework( "utest.runner.Framework" )
 
 libraryDependencies ++= Seq(
+  "com.lihaoyi" %%% "fastparse" % "1.0.0",
   "com.github.scopt" %%% "scopt" % "3.7.0"
 )
 

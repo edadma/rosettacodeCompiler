@@ -1,11 +1,48 @@
 package xyz.hyperreal.rosettacodeCompiler
 
+import java.io.{BufferedReader, FileReader, Reader, StringReader}
+
 import scala.collection.mutable
 
-class VirtualMachine(code: IndexedSeq[Byte], data: mutable.IndexedSeq[Int], strings: IndexedSeq[String]) {
+object VirtualMachine {
+
+  private val HEADER_REGEX = "Datasize: ([0-9]+) Strings: ([0-9]+)" r
+  private val STRING_REGEX = "\"([^\"]*)\"" r
+
+  def apply(file: String) = loadFromFile(file)
+
+  def loadFromFile(file: String) = loadFromReader(new FileReader(file))
+
+  def loadFromString(src: String) = loadFromReader(new StringReader(src))
+
+  def loadFromReader(r: Reader) = {
+    val in = new BufferedReader(r)
+
+    in.readLine match {
+      case HEADER_REGEX(datasize, stringsize) =>
+        val strings =
+          for (_ <- 1 to stringsize.toInt)
+            yield
+              in.readLine match {
+                case STRING_REGEX(s) =>
+                  s.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t").replace("\\\\", "\\")
+                case null => sys.error("expected string constant but encountered end of input")
+                case s    => sys.error(s"expected string constant: $s")
+              }
+
+        new VirtualMachine(IndexedSeq[Byte](), datasize.toInt, strings)
+      case _ => sys.error("expected header")
+    }
+
+    in.close
+  }
+}
+
+class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[String]) {
 
   var pc      = 0
   val stack   = new mutable.ArrayStack[Int]
+  val data    = new Array[Int](datasize)
   var running = false
 
   def getByte = {
@@ -66,10 +103,12 @@ class VirtualMachine(code: IndexedSeq[Byte], data: mutable.IndexedSeq[Int], stri
   }
 
   def run = {
-    mutable.IndexedSeq.fill(data.size)(0)
+
     pc = 0
     stack.clear
     running = true
+
+    for (i <- data.indices) data(i) = 0
 
     while (running) execute
   }
