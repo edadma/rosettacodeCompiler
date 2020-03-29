@@ -24,6 +24,10 @@ object Main extends App {
       |"\n"
       | 0 push 0
       | 5 prts
+      | 0 push 1
+      | 0 push 2
+      | 0 lt
+      | 0 jz (20) 0
       | 6 push 5
       | 0 store [0]
       | 0 fetch [0]

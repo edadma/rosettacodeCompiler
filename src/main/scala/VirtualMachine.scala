@@ -17,6 +17,8 @@ object VirtualMachine {
   private val HALT_REGEX   = "[ ]*[0-9]+ halt" r
   private val STORE_REGEX  = "[ ]*[0-9]+ store[ ]+\\[([0-9]+)\\]" r
   private val FETCH_REGEX  = "[ ]*[0-9]+ fetch[ ]+\\[([0-9]+)\\]" r
+  private val LT_REGEX     = "[ ]*[0-9]+ lt" r
+  private val JZ_REGEX     = "[ ]*[0-9]+ jz[ ]+\\((-?[0-9]+)\\) [0-9]+" r
 
   def apply(file: String) = loadFromFile(file)
 
@@ -61,6 +63,8 @@ object VirtualMachine {
             case HALT_REGEX()     => code += HALT
             case STORE_REGEX(idx) => addInst(STORE, idx)
             case FETCH_REGEX(idx) => addInst(FETCH, idx)
+            case LT_REGEX()       => code += LT
+            case JZ_REGEX(disp)   => addInst(JZ, disp)
           }
 
           new VirtualMachine(code, datasize.toInt, strings)
@@ -101,8 +105,8 @@ class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[
       case FETCH => stack push data(getInt)
       case STORE => data(getInt) = stack.pop
       case PUSH  => stack push getInt
-      case JMP   => pc += getInt
-      case JZ    => if (stack.pop != 0) pc += getInt else pc += 4
+      case JMP   => pc = pc + getInt
+      case JZ    => if (stack.pop == 0) pc = pc + getInt else pc += 4
       case ADD   => stack push (stack.pop + stack.pop)
       case SUB =>
         val y = stack pop
@@ -117,10 +121,10 @@ class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[
         val y = stack pop
 
         stack push (stack.pop % y)
-      case LT   => pushBoolean(stack.pop >= stack.pop)
-      case GT   => pushBoolean(stack.pop <= stack.pop)
-      case LE   => pushBoolean(stack.pop > stack.pop)
-      case GE   => pushBoolean(stack.pop < stack.pop)
+      case LT   => pushBoolean(stack.pop > stack.pop)
+      case GT   => pushBoolean(stack.pop < stack.pop)
+      case LE   => pushBoolean(stack.pop >= stack.pop)
+      case GE   => pushBoolean(stack.pop <= stack.pop)
       case EQ   => pushBoolean(stack.pop == stack.pop)
       case NE   => pushBoolean(stack.pop != stack.pop)
       case AND  => pushBoolean(popBoolean && popBoolean)
