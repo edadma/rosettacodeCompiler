@@ -19,10 +19,17 @@ object Main extends App {
 //      |""".trim.stripMargin)
 
   VirtualMachine.loadFromString("""
-      |Datasize: 0 Strings: 1
-      |"Hello world!\n"
+      |Datasize: 1 Strings: 2
+      |"Hello world! "
+      |"\n"
       | 0 push 0
       | 5 prts
+      | 6 push 5
+      | 0 store [0]
+      | 0 fetch [0]
+      | 0 prti
+      | 0 push 1
+      | 0 prts
       | 6 halt
       |""".trim.stripMargin).run
 

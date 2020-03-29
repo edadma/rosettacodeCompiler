@@ -13,7 +13,10 @@ object VirtualMachine {
   private val STRING_REGEX = "\"([^\"]*)\"" r
   private val PUSH_REGEX   = "[ ]*[0-9]+ push[ ]+([0-9]+)" r
   private val PRTS_REGEX   = "[ ]*[0-9]+ prts" r
+  private val PRTI_REGEX   = "[ ]*[0-9]+ prti" r
   private val HALT_REGEX   = "[ ]*[0-9]+ halt" r
+  private val STORE_REGEX  = "[ ]*[0-9]+ store[ ]+\\[([0-9]+)\\]" r
+  private val FETCH_REGEX  = "[ ]*[0-9]+ fetch[ ]+\\[([0-9]+)\\]" r
 
   def apply(file: String) = loadFromFile(file)
 
@@ -43,16 +46,21 @@ object VirtualMachine {
             code += a.toByte
           }
 
-          def addInst(opcode: Byte, operand: Int) = {
+          def addInst(opcode: Byte, operand: String) = {
+            val opint = operand.toInt
+
             code += opcode
-            addShort(operand >> 16)
-            addShort(operand)
+            addShort(opint >> 16)
+            addShort(opint)
           }
 
           while ({ line = in.readLine; line ne null }) line match {
-            case PUSH_REGEX(n) => addInst(PUSH, n.toInt)
-            case PRTS_REGEX()  => code += PRTS
-            case HALT_REGEX()  => code += HALT
+            case PUSH_REGEX(n)    => addInst(PUSH, n)
+            case PRTS_REGEX()     => code += PRTS
+            case PRTI_REGEX()     => code += PRTI
+            case HALT_REGEX()     => code += HALT
+            case STORE_REGEX(idx) => addInst(STORE, idx)
+            case FETCH_REGEX(idx) => addInst(FETCH, idx)
           }
 
           new VirtualMachine(code, datasize.toInt, strings)
