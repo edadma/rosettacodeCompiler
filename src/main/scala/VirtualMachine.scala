@@ -14,12 +14,26 @@ object VirtualMachine {
   private val PUSH_REGEX   = "[ ]*[0-9]+ push[ ]+([0-9]+)" r
   private val PRTS_REGEX   = "[ ]*[0-9]+ prts" r
   private val PRTI_REGEX   = "[ ]*[0-9]+ prti" r
+  private val PRTC_REGEX   = "[ ]*[0-9]+ prtc" r
   private val HALT_REGEX   = "[ ]*[0-9]+ halt" r
   private val STORE_REGEX  = "[ ]*[0-9]+ store[ ]+\\[([0-9]+)\\]" r
   private val FETCH_REGEX  = "[ ]*[0-9]+ fetch[ ]+\\[([0-9]+)\\]" r
   private val LT_REGEX     = "[ ]*[0-9]+ lt" r
+  private val GT_REGEX     = "[ ]*[0-9]+ gt" r
+  private val LE_REGEX     = "[ ]*[0-9]+ le" r
+  private val GE_REGEX     = "[ ]*[0-9]+ ge" r
+  private val NE_REGEX     = "[ ]*[0-9]+ ne" r
+  private val EQ_REGEX     = "[ ]*[0-9]+ eq" r
   private val JZ_REGEX     = "[ ]*[0-9]+ jz[ ]+\\((-?[0-9]+)\\) [0-9]+" r
   private val ADD_REGEX    = "[ ]*[0-9]+ add" r
+  private val SUB_REGEX    = "[ ]*[0-9]+ sub" r
+  private val MUL_REGEX    = "[ ]*[0-9]+ mul" r
+  private val DIV_REGEX    = "[ ]*[0-9]+ div" r
+  private val MOD_REGEX    = "[ ]*[0-9]+ mod" r
+  private val AND_REGEX    = "[ ]*[0-9]+ and" r
+  private val OR_REGEX     = "[ ]*[0-9]+ or" r
+  private val NOT_REGEX    = "[ ]*[0-9]+ not" r
+  private val NEG_REGEX    = "[ ]*[0-9]+ neg" r
   private val JMP_REGEX    = "[ ]*[0-9]+ jmp[ ]+\\((-?[0-9]+)\\) [0-9]+" r
 
   def apply(file: String) = loadFromFile(file)
@@ -62,12 +76,26 @@ object VirtualMachine {
             case PUSH_REGEX(n)    => addInst(PUSH, n)
             case PRTS_REGEX()     => code += PRTS
             case PRTI_REGEX()     => code += PRTI
+            case PRTC_REGEX()     => code += PRTC
             case HALT_REGEX()     => code += HALT
             case STORE_REGEX(idx) => addInst(STORE, idx)
             case FETCH_REGEX(idx) => addInst(FETCH, idx)
             case LT_REGEX()       => code += LT
+            case GT_REGEX()       => code += GT
+            case LE_REGEX()       => code += LE
+            case GE_REGEX()       => code += GE
+            case NE_REGEX()       => code += NE
+            case EQ_REGEX()       => code += EQ
             case JZ_REGEX(disp)   => addInst(JZ, disp)
             case ADD_REGEX()      => code += ADD
+            case SUB_REGEX()      => code += SUB
+            case MUL_REGEX()      => code += MUL
+            case DIV_REGEX()      => code += DIV
+            case MOD_REGEX()      => code += MOD
+            case AND_REGEX()      => code += AND
+            case OR_REGEX()       => code += OR
+            case NOT_REGEX()      => code += NOT
+            case NEG_REGEX()      => code += NEG
             case JMP_REGEX(disp)  => addInst(JMP, disp)
           }
 
@@ -94,13 +122,27 @@ class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[
     byte
   }
 
-  def getShort = { getByte << 8 | getByte }
+  def getShort = getByte << 8 | getByte
 
-  def getInt = { getShort << 16 | getShort }
+  def getInt = getShort << 16 | getShort
 
   def pushBoolean(b: Boolean) = stack push (if (b) 1 else 0)
 
   def popBoolean = if (stack.pop != 0) true else false
+
+  def operator(f: (Int, Int) => Int) = {
+    val y = stack.pop
+
+    stack.push(f(stack.pop, y))
+  }
+
+  def relation(r: (Int, Int) => Boolean) = {
+    val y = stack.pop
+
+    pushBoolean(r(stack.pop, y))
+  }
+
+  def connective(c: (Boolean, Boolean) => Boolean) = pushBoolean(c(popBoolean, popBoolean))
 
   def execute: Unit = {
     val opcode = getByte
@@ -111,34 +153,25 @@ class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[
       case PUSH  => stack push getInt
       case JMP   => pc = pc + getInt
       case JZ    => if (stack.pop == 0) pc = pc + getInt else pc += 4
-      case ADD   => stack push (stack.pop + stack.pop)
-      case SUB =>
-        val y = stack pop
-
-        stack push (stack.pop - y)
-      case MUL => stack push (stack.pop * stack.pop)
-      case DIV =>
-        val y = stack pop
-
-        stack push (stack.pop / y)
-      case MOD =>
-        val y = stack pop
-
-        stack push (stack.pop % y)
-      case LT   => pushBoolean(stack.pop > stack.pop)
-      case GT   => pushBoolean(stack.pop < stack.pop)
-      case LE   => pushBoolean(stack.pop >= stack.pop)
-      case GE   => pushBoolean(stack.pop <= stack.pop)
-      case EQ   => pushBoolean(stack.pop == stack.pop)
-      case NE   => pushBoolean(stack.pop != stack.pop)
-      case AND  => pushBoolean(popBoolean && popBoolean)
-      case OR   => pushBoolean(popBoolean || popBoolean)
-      case NEG  => stack push -stack.pop
-      case NOT  => pushBoolean(!popBoolean)
-      case PRTC => print(stack.pop.toChar)
-      case PRTI => print(stack.pop)
-      case PRTS => print(strings(stack.pop))
-      case HALT => running = false
+      case ADD   => operator(_ + _)
+      case SUB   => operator(_ - _)
+      case MUL   => operator(_ * _)
+      case DIV   => operator(_ / _)
+      case MOD   => operator(_ % _)
+      case LT    => relation(_ < _)
+      case GT    => relation(_ > _)
+      case LE    => relation(_ <= _)
+      case GE    => relation(_ >= _)
+      case EQ    => relation(_ == _)
+      case NE    => relation(_ != _)
+      case AND   => connective(_ && _)
+      case OR    => connective(_ || _)
+      case NEG   => stack push -stack.pop
+      case NOT   => pushBoolean(!popBoolean)
+      case PRTC  => print(stack.pop.toChar)
+      case PRTI  => print(stack.pop)
+      case PRTS  => print(strings(stack.pop))
+      case HALT  => running = false
     }
   }
 
