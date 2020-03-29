@@ -3,11 +3,17 @@ package xyz.hyperreal.rosettacodeCompiler
 import java.io.{BufferedReader, FileReader, Reader, StringReader}
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+
+import Opcodes._
 
 object VirtualMachine {
 
   private val HEADER_REGEX = "Datasize: ([0-9]+) Strings: ([0-9]+)" r
   private val STRING_REGEX = "\"([^\"]*)\"" r
+  private val PUSH_REGEX   = "[ ]*[0-9]+ push[ ]+([0-9]+)" r
+  private val PRTS_REGEX   = "[ ]*[0-9]+ prts" r
+  private val HALT_REGEX   = "[ ]*[0-9]+ halt" r
 
   def apply(file: String) = loadFromFile(file)
 
@@ -17,24 +23,44 @@ object VirtualMachine {
 
   def loadFromReader(r: Reader) = {
     val in = new BufferedReader(r)
+    val vm =
+      in.readLine match {
+        case HEADER_REGEX(datasize, stringsize) =>
+          val strings =
+            for (_ <- 1 to stringsize.toInt)
+              yield
+                in.readLine match {
+                  case STRING_REGEX(s) =>
+                    s.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t").replace("\\\\", "\\")
+                  case null => sys.error("expected string constant but encountered end of input")
+                  case s    => sys.error(s"expected string constant: $s")
+                }
+          var line: String = null
+          val code         = new ArrayBuffer[Byte]
 
-    in.readLine match {
-      case HEADER_REGEX(datasize, stringsize) =>
-        val strings =
-          for (_ <- 1 to stringsize.toInt)
-            yield
-              in.readLine match {
-                case STRING_REGEX(s) =>
-                  s.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t").replace("\\\\", "\\")
-                case null => sys.error("expected string constant but encountered end of input")
-                case s    => sys.error(s"expected string constant: $s")
-              }
+          def addShort(a: Int) = {
+            code += (a >> 8).toByte
+            code += a.toByte
+          }
 
-        new VirtualMachine(IndexedSeq[Byte](), datasize.toInt, strings)
-      case _ => sys.error("expected header")
-    }
+          def addInst(opcode: Byte, operand: Int) = {
+            code += opcode
+            addShort(operand >> 16)
+            addShort(operand)
+          }
+
+          while ({ line = in.readLine; line ne null }) line match {
+            case PUSH_REGEX(n) => addInst(PUSH, n.toInt)
+            case PRTS_REGEX()  => code += PRTS
+            case HALT_REGEX()  => code += HALT
+          }
+
+          new VirtualMachine(code, datasize.toInt, strings)
+        case _ => sys.error("expected header")
+      }
 
     in.close
+    vm
   }
 }
 
@@ -62,8 +88,6 @@ class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[
 
   def execute: Unit = {
     val opcode = getByte
-
-    import Opcodes._
 
     opcode match {
       case FETCH => stack push data(getInt)
