@@ -19,6 +19,8 @@ object VirtualMachine {
   private val FETCH_REGEX  = "[ ]*[0-9]+ fetch[ ]+\\[([0-9]+)\\]" r
   private val LT_REGEX     = "[ ]*[0-9]+ lt" r
   private val JZ_REGEX     = "[ ]*[0-9]+ jz[ ]+\\((-?[0-9]+)\\) [0-9]+" r
+  private val ADD_REGEX    = "[ ]*[0-9]+ add" r
+  private val JMP_REGEX    = "[ ]*[0-9]+ jmp[ ]+\\((-?[0-9]+)\\) [0-9]+" r
 
   def apply(file: String) = loadFromFile(file)
 
@@ -65,6 +67,8 @@ object VirtualMachine {
             case FETCH_REGEX(idx) => addInst(FETCH, idx)
             case LT_REGEX()       => code += LT
             case JZ_REGEX(disp)   => addInst(JZ, disp)
+            case ADD_REGEX()      => code += ADD
+            case JMP_REGEX(disp)  => addInst(JMP, disp)
           }
 
           new VirtualMachine(code, datasize.toInt, strings)
