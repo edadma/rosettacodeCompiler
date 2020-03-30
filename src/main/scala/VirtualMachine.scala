@@ -11,30 +11,30 @@ object VirtualMachine {
 
   private val HEADER_REGEX = "Datasize: ([0-9]+) Strings: ([0-9]+)" r
   private val STRING_REGEX = "\"([^\"]*)\"" r
-  private val PUSH_REGEX   = "[ ]*[0-9]+ push[ ]+([0-9]+)" r
-  private val PRTS_REGEX   = "[ ]*[0-9]+ prts" r
-  private val PRTI_REGEX   = "[ ]*[0-9]+ prti" r
-  private val PRTC_REGEX   = "[ ]*[0-9]+ prtc" r
-  private val HALT_REGEX   = "[ ]*[0-9]+ halt" r
-  private val STORE_REGEX  = "[ ]*[0-9]+ store[ ]+\\[([0-9]+)\\]" r
-  private val FETCH_REGEX  = "[ ]*[0-9]+ fetch[ ]+\\[([0-9]+)\\]" r
-  private val LT_REGEX     = "[ ]*[0-9]+ lt" r
-  private val GT_REGEX     = "[ ]*[0-9]+ gt" r
-  private val LE_REGEX     = "[ ]*[0-9]+ le" r
-  private val GE_REGEX     = "[ ]*[0-9]+ ge" r
-  private val NE_REGEX     = "[ ]*[0-9]+ ne" r
-  private val EQ_REGEX     = "[ ]*[0-9]+ eq" r
-  private val JZ_REGEX     = "[ ]*[0-9]+ jz[ ]+\\((-?[0-9]+)\\) [0-9]+" r
-  private val ADD_REGEX    = "[ ]*[0-9]+ add" r
-  private val SUB_REGEX    = "[ ]*[0-9]+ sub" r
-  private val MUL_REGEX    = "[ ]*[0-9]+ mul" r
-  private val DIV_REGEX    = "[ ]*[0-9]+ div" r
-  private val MOD_REGEX    = "[ ]*[0-9]+ mod" r
-  private val AND_REGEX    = "[ ]*[0-9]+ and" r
-  private val OR_REGEX     = "[ ]*[0-9]+ or" r
-  private val NOT_REGEX    = "[ ]*[0-9]+ not" r
-  private val NEG_REGEX    = "[ ]*[0-9]+ neg" r
-  private val JMP_REGEX    = "[ ]*[0-9]+ jmp[ ]+\\((-?[0-9]+)\\) [0-9]+" r
+  private val PUSH_REGEX   = " *[0-9]+ push +([0-9]+)" r
+  private val PRTS_REGEX   = " *[0-9]+ prts" r
+  private val PRTI_REGEX   = " *[0-9]+ prti" r
+  private val PRTC_REGEX   = " *[0-9]+ prtc" r
+  private val HALT_REGEX   = " *[0-9]+ halt" r
+  private val STORE_REGEX  = " *[0-9]+ store +\\[([0-9]+)\\]" r
+  private val FETCH_REGEX  = " *[0-9]+ fetch +\\[([0-9]+)\\]" r
+  private val LT_REGEX     = " *[0-9]+ lt" r
+  private val GT_REGEX     = " *[0-9]+ gt" r
+  private val LE_REGEX     = " *[0-9]+ le" r
+  private val GE_REGEX     = " *[0-9]+ ge" r
+  private val NE_REGEX     = " *[0-9]+ ne" r
+  private val EQ_REGEX     = " *[0-9]+ eq" r
+  private val JZ_REGEX     = " *[0-9]+ jz +\\((-?[0-9]+)\\) [0-9]+" r
+  private val ADD_REGEX    = " *[0-9]+ add" r
+  private val SUB_REGEX    = " *[0-9]+ sub" r
+  private val MUL_REGEX    = " *[0-9]+ mul" r
+  private val DIV_REGEX    = " *[0-9]+ div" r
+  private val MOD_REGEX    = " *[0-9]+ mod" r
+  private val AND_REGEX    = " *[0-9]+ and" r
+  private val OR_REGEX     = " *[0-9]+ or" r
+  private val NOT_REGEX    = " *[0-9]+ not" r
+  private val NEG_REGEX    = " *[0-9]+ neg" r
+  private val JMP_REGEX    = " *[0-9]+ jmp +\\((-?[0-9]+)\\) [0-9]+" r
 
   def apply(file: String) = loadFromFile(file)
 
@@ -106,6 +106,7 @@ object VirtualMachine {
     in.close
     vm
   }
+
 }
 
 class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[String]) {
@@ -176,7 +177,6 @@ class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[
   }
 
   def run = {
-
     pc = 0
     stack.clear
     running = true
