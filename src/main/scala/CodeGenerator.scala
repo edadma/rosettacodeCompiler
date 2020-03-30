@@ -11,16 +11,50 @@ object CodeGenerator {
     val code    = new ArrayBuffer[Inst]
     val it      = ast.getLines
 
-    generate
-
-    def generate =
-      if (it.hasNext)
-        it.next match {
-          case "Sequence" =>
-          case ";"        =>
-          case "Assign"   =>
+    def line =
+      if (it.hasNext) {
+        it.next.split(" +", 2) match {
+          case Array(n) => n
+          case a        => a
         }
+      } else
+        sys.error("unexpected end of AST")
 
+    def variable(name: String) =
+      vars get name match {
+        case None =>
+          val idx = vars.size
+
+          vars(name) = idx
+          idx
+        case Some(idx) => idx
+      }
+
+    generate
+    code += HaltInst
+    println(code mkString "\n")
+
+    def generate: Unit =
+      line match {
+        case "Sequence" =>
+          generate
+          generate
+        case ";" =>
+        case "Assign" =>
+          val idx =
+            line match {
+              case Array("Identifier", name: String) => variable(name)
+              case l                                 => sys.error(s"expected identifier: $l")
+            }
+
+          generate
+          code += StoreInst(idx)
+        case Array("Identifier", name: String) => code += FetchInst(variable(name))
+        case Array("Integer", n: String)       => code += PushInst(n.toInt)
+        case "Prti" =>
+          generate
+          code += PrtiInst
+      }
   }
 
 }
