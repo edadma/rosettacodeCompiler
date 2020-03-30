@@ -36,13 +36,13 @@ object VirtualMachine {
   private val NEG_REGEX    = " *[0-9]+ neg" r
   private val JMP_REGEX    = " *[0-9]+ jmp +\\((-?[0-9]+)\\) [0-9]+" r
 
-  def apply(file: String) = loadFromFile(file)
+  def fromStdin = fromReader(Console.in)
 
-  def loadFromFile(file: String) = loadFromReader(new FileReader(file))
+  def fromFile(file: String) = fromReader(new FileReader(file))
 
-  def loadFromString(src: String) = loadFromReader(new StringReader(src))
+  def fromString(src: String) = fromReader(new StringReader(src))
 
-  def loadFromReader(r: Reader) = {
+  def fromReader(r: Reader) = {
     val in = new BufferedReader(r)
     val vm =
       in.readLine match {

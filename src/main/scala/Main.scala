@@ -1,11 +1,13 @@
 package xyz.hyperreal.rosettacodeCompiler
 
+import java.io.ByteArrayOutputStream
+
 import scala.collection.mutable
 import scala.io.Source
 
 object Main extends App {
 
-//  VirtualMachine.loadFromString("""
+//  VirtualMachine.fromString("""
 //      |Datasize: 1 Strings: 2
 //      |"count is: "
 //      |"\n"
@@ -29,13 +31,24 @@ object Main extends App {
 //      |   65 halt
 //      |""".trim.stripMargin).run
 
-  CodeGenerator.generate(Source.fromString("""
+  val code =
+    capture(CodeGenerator.fromSource(Source.fromString("""
                                              |Sequence
                                              |Assign
                                              |Identifier    count
-                                             |Integer       1
+                                             |Integer       5
                                              |Prti
                                              |Identifier    count
-                                             |""".trim.stripMargin))
+                                             |""".trim.stripMargin)))
+
+  println(code)
+  VirtualMachine.fromString(code).run
+
+  def capture(thunk: => Unit) = {
+    val buf = new ByteArrayOutputStream
+
+    Console.withOut(buf)(thunk)
+    buf.toString
+  }
 
 }
