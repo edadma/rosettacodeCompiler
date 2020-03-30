@@ -17,10 +17,7 @@ object CodeGenerator {
 
     def line =
       if (it.hasNext) {
-        val s = it.next
-
-        println(s"]] $s")
-        s.split(" +", 2) match {
+        it.next.split(" +", 2) match {
           case Array(n) => n
           case a        => a
         }
@@ -69,7 +66,7 @@ object CodeGenerator {
         case GeInst         => "ge"
         case NeInst         => "ne"
         case EqInst         => "eq"
-        case JzInst(disp)   => s"jz ($disp) ${loc + disp + 1}"
+        case JzInst(disp)   => s"jz    ($disp) ${loc + disp + 1}"
         case AddInst        => "add"
         case SubInst        => "sub"
         case MulInst        => "mul"
@@ -79,7 +76,7 @@ object CodeGenerator {
         case OrInst         => "or"
         case NegInst        => "neg"
         case NotInst        => "not"
-        case JmpInst(disp)  => s"jmp ($disp) ${loc + disp + 1}"
+        case JmpInst(disp)  => s"jmp   ($disp) ${loc + disp + 1}"
       })
 
       loc += (if (inst.isInstanceOf[OperandInst]) 5 else 1)
@@ -88,30 +85,22 @@ object CodeGenerator {
     def generate: Unit =
       line match {
         case "Sequence" =>
-          println(">> seq")
           generate
-          println(">>>")
           generate
-        case ";" => println(">> null")
+        case ";" =>
         case "Assign" =>
           val idx =
             line match {
               case Array("Identifier", name: String) =>
-                println(s">> $name =")
                 variable(name)
               case l => sys.error(s"expected identifier: $l")
             }
 
           generate
           add(StoreInst(idx))
-        case Array("Identifier", name: String) =>
-          println(s">> fetch $name")
-          add(FetchInst(variable(name)))
-        case Array("Integer", n: String) =>
-          println(s">> push $n")
-          add(PushInst(n.toInt))
+        case Array("Identifier", name: String) => add(FetchInst(variable(name)))
+        case Array("Integer", n: String)       => add(PushInst(n.toInt))
         case Array("String", s: String) =>
-          println(s">> string $s")
           add(PushInst(strings indexOf s match {
             case -1 =>
               val idx = strings.length
@@ -127,8 +116,6 @@ object CodeGenerator {
           generate
           add(PrtsInst)
         case "While" =>
-          println(">> while")
-
           val start = loc
 
           generate
@@ -142,7 +129,6 @@ object CodeGenerator {
           code(condidx) = JzInst(loc - cond - 1)
         case op @ ("Add" | "Subtract" | "Multiply" | "Divide" | "Mod" | "Less" | "LessEqual" | "Greater" |
             "GreaterEqual" | "Equal" | "NotEqual" | "And" | "Or") =>
-          println(s">> op $op")
           generate
           generate
           add(
