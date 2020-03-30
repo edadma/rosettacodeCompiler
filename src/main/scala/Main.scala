@@ -34,15 +34,40 @@ object Main extends App {
   val code =
     capture(CodeGenerator.fromSource(Source.fromString("""
                                              |Sequence
+                                             |Sequence
+                                             |;
                                              |Assign
                                              |Identifier    count
-                                             |Integer       5
+                                             |Integer       1
+                                             |While
+                                             |Less
+                                             |Identifier    count
+                                             |Integer       10
+                                             |Sequence
+                                             |Sequence
+                                             |;
+                                             |Sequence
+                                             |Sequence
+                                             |Sequence
+                                             |;
+                                             |Prts
+                                             |String        "count is: "
+                                             |;
                                              |Prti
                                              |Identifier    count
+                                             |;
+                                             |Prts
+                                             |String        "\n"
+                                             |;
+                                             |Assign
+                                             |Identifier    count
+                                             |Add
+                                             |Identifier    count
+                                             |Integer       1
                                              |""".trim.stripMargin)))
 
   println(code)
-  VirtualMachine.fromString(code).run
+  //VirtualMachine.fromString(code).run
 
   def capture(thunk: => Unit) = {
     val buf = new ByteArrayOutputStream

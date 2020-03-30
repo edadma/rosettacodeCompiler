@@ -17,7 +17,10 @@ object CodeGenerator {
 
     def line =
       if (it.hasNext) {
-        it.next.split(" +", 2) match {
+        val s = it.next
+
+        println(s"]] $s")
+        s.split(" +", 2) match {
           case Array(n) => n
           case a        => a
         }
@@ -36,12 +39,17 @@ object CodeGenerator {
 
     var loc = 0
 
+    def add(inst: Inst) = {
+      loc += (if (inst.isInstanceOf[OperandInst]) 5 else 1)
+      code += inst
+    }
+
     generate
-    code += HaltInst
+    add(HaltInst)
     println(s"Datasize: ${vars.size} Strings: ${strings.length}")
 
     for (s <- strings)
-      println(s""""$s"""")
+      println(s)
 
     loc = 0
 
@@ -55,6 +63,23 @@ object CodeGenerator {
         case HaltInst       => "halt"
         case StoreInst(idx) => s"store [$idx]"
         case FetchInst(idx) => s"fetch [$idx]"
+        case LtInst         => "lt"
+        case GtInst         => "gt"
+        case LeInst         => "le"
+        case GeInst         => "ge"
+        case NeInst         => "ne"
+        case EqInst         => "eq"
+        case JzInst(disp)   => s"jz ($disp) ${loc + disp + 1}"
+        case AddInst        => "add"
+        case SubInst        => "sub"
+        case MulInst        => "mul"
+        case DivInst        => "div"
+        case ModInst        => "mod"
+        case AndInst        => "and"
+        case OrInst         => "or"
+        case NegInst        => "neg"
+        case NotInst        => "not"
+        case JmpInst(disp)  => s"jmp ($disp) ${loc + disp + 1}"
       })
 
       loc += (if (inst.isInstanceOf[OperandInst]) 5 else 1)
@@ -63,43 +88,80 @@ object CodeGenerator {
     def generate: Unit =
       line match {
         case "Sequence" =>
+          println(">> seq")
           generate
+          println(">>>")
           generate
-        case ";" =>
+        case ";" => println(">> null")
         case "Assign" =>
           val idx =
             line match {
-              case Array("Identifier", name: String) => variable(name)
-              case l                                 => sys.error(s"expected identifier: $l")
+              case Array("Identifier", name: String) =>
+                println(s">> $name =")
+                variable(name)
+              case l => sys.error(s"expected identifier: $l")
             }
 
           generate
-          code += StoreInst(idx)
-        case Array("Identifier", name: String) => code += FetchInst(variable(name))
-        case Array("Integer", n: String)       => code += PushInst(n.toInt)
+          add(StoreInst(idx))
+        case Array("Identifier", name: String) =>
+          println(s">> fetch $name")
+          add(FetchInst(variable(name)))
+        case Array("Integer", n: String) =>
+          println(s">> push $n")
+          add(PushInst(n.toInt))
         case Array("String", s: String) =>
-          PushInst(strings indexOf s match {
+          println(s">> string $s")
+          add(PushInst(strings indexOf s match {
             case -1 =>
               val idx = strings.length
 
               strings += s
               idx
             case idx => idx
-          })
+          }))
         case "Prti" =>
           generate
-          code += PrtiInst
+          add(PrtiInst)
+        case "Prts" =>
+          generate
+          add(PrtsInst)
         case "While" =>
-          val start = code.length
+          println(">> while")
+
+          val start = loc
 
           generate
 
-          val cond = code.length
+          val cond    = loc
+          val condidx = code.length
 
-          code += null
+          add(JzInst(0))
           generate
-          code += JmpInst(start - code.length)
-          code(cond) = JzInst(code.length - cond)
+          add(JmpInst(start - loc - 1))
+          code(condidx) = JzInst(loc - cond - 1)
+        case op @ ("Add" | "Subtract" | "Multiply" | "Divide" | "Mod" | "Less" | "LessEqual" | "Greater" |
+            "GreaterEqual" | "Equal" | "NotEqual" | "And" | "Or") =>
+          println(s">> op $op")
+          generate
+          generate
+          add(
+            op match {
+              case "Add"          => AddInst
+              case "Subtract"     => SubInst
+              case "Multiply"     => MulInst
+              case "Divide"       => DivInst
+              case "Mod"          => ModInst
+              case "Less"         => LtInst
+              case "LessEqual"    => LeInst
+              case "Greater"      => GtInst
+              case "GreaterEqual" => GeInst
+              case "Equal"        => EqInst
+              case "NotEqual"     => NeInst
+              case "And"          => AndInst
+              case "Or"           => OrInst
+            }
+          )
       }
   }
 
