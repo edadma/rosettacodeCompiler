@@ -43,6 +43,8 @@ object CodeGenerator {
     for (s <- strings)
       println(s""""$s"""")
 
+    loc = 0
+
     for (inst <- code) {
       print(f"$loc%4d ")
       println(inst match {
@@ -75,38 +77,57 @@ object CodeGenerator {
           code += StoreInst(idx)
         case Array("Identifier", name: String) => code += FetchInst(variable(name))
         case Array("Integer", n: String)       => code += PushInst(n.toInt)
+        case Array("String", s: String) =>
+          PushInst(strings indexOf s match {
+            case -1 =>
+              val idx = strings.length
+
+              strings += s
+              idx
+            case idx => idx
+          })
         case "Prti" =>
           generate
           code += PrtiInst
+        case "While" =>
+          val start = code.length
+
+          generate
+
+          val cond = code.length
+
+          code += null
+          generate
+          code += JmpInst(start - code.length)
+          code(cond) = JzInst(code.length - cond)
       }
   }
 
 }
 
 abstract class Inst
-abstract class JumpInst extends OperandInst { var disp: Int }
-trait OperandInst
-case class PushInst(n: Int)       extends Inst with OperandInst
-case object PrtsInst              extends Inst
-case object PrtiInst              extends Inst
-case object PrtcInst              extends Inst
-case object HaltInst              extends Inst
-case class StoreInst(idx: Int)    extends Inst with OperandInst
-case class FetchInst(idx: Int)    extends Inst with OperandInst
-case object LtInst                extends Inst
-case object GtInst                extends Inst
-case object LeInst                extends Inst
-case object GeInst                extends Inst
-case object NeInst                extends Inst
-case object EqInst                extends Inst
-case class JzInst(var disp: Int)  extends JumpInst
-case object AddInst               extends Inst
-case object SubInst               extends Inst
-case object MulInst               extends Inst
-case object DivInst               extends Inst
-case object ModInst               extends Inst
-case object AndInst               extends Inst
-case object OrInst                extends Inst
-case object NegInst               extends Inst
-case object NotInst               extends Inst
-case class JmpInst(var disp: Int) extends JumpInst
+abstract class OperandInst     extends Inst
+case class PushInst(n: Int)    extends OperandInst
+case object PrtsInst           extends Inst
+case object PrtiInst           extends Inst
+case object PrtcInst           extends Inst
+case object HaltInst           extends Inst
+case class StoreInst(idx: Int) extends OperandInst
+case class FetchInst(idx: Int) extends OperandInst
+case object LtInst             extends Inst
+case object GtInst             extends Inst
+case object LeInst             extends Inst
+case object GeInst             extends Inst
+case object NeInst             extends Inst
+case object EqInst             extends Inst
+case class JzInst(disp: Int)   extends OperandInst
+case object AddInst            extends Inst
+case object SubInst            extends Inst
+case object MulInst            extends Inst
+case object DivInst            extends Inst
+case object ModInst            extends Inst
+case object AndInst            extends Inst
+case object OrInst             extends Inst
+case object NegInst            extends Inst
+case object NotInst            extends Inst
+case class JmpInst(disp: Int)  extends OperandInst
