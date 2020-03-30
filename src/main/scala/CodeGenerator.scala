@@ -10,14 +10,18 @@ object CodeGenerator {
   def fromString(src: String) = fromSource(Source.fromString(src))
 
   def fromSource(ast: Source) = {
-    val vars    = new LinkedHashMap[String, Int]
-    val strings = new ArrayBuffer[String]
-    val code    = new ArrayBuffer[Inst]
-    val it      = ast.getLines
+    val vars              = new LinkedHashMap[String, Int]
+    val strings           = new ArrayBuffer[String]
+    val code              = new ArrayBuffer[Inst]
+    var s: Stream[String] = ast.getLines.toStream
 
     def line =
-      if (it.hasNext) {
-        it.next.split(" +", 2) match {
+      if (s.nonEmpty) {
+        val n = s.head
+
+        s = s.tail
+
+        n.split(" +", 2) match {
           case Array(n) => n
           case a        => a
         }
@@ -109,12 +113,28 @@ object CodeGenerator {
               idx
             case idx => idx
           }))
-        case "Prti" =>
+        case "If" =>
           generate
-          add(PrtiInst)
-        case "Prts" =>
+
+          val cond    = loc
+          val condidx = code.length
+
+          add(JzInst(0))
+          s = s.tail // skip "If"
           generate
-          add(PrtsInst)
+
+          if (s.head == ";") {
+            s = s.tail
+            code(condidx) = JzInst(loc - cond - 1)
+          } else {
+            val jump    = loc
+            val jumpidx = code.length
+
+            add(JmpInst(0))
+            code(condidx) = JzInst(loc - cond - 1)
+            generate
+            code(jumpidx) = JmpInst(loc - jump - 1)
+          }
         case "While" =>
           val start = loc
 
@@ -127,12 +147,13 @@ object CodeGenerator {
           generate
           add(JmpInst(start - loc - 1))
           code(condidx) = JzInst(loc - cond - 1)
-        case op @ ("Add" | "Subtract" | "Multiply" | "Divide" | "Mod" | "Less" | "LessEqual" | "Greater" |
-            "GreaterEqual" | "Equal" | "NotEqual" | "And" | "Or") =>
+        case op =>
           generate
           generate
           add(
             op match {
+              case "Prti"         => PrtiInst
+              case "Prts"         => PrtsInst
               case "Add"          => AddInst
               case "Subtract"     => SubInst
               case "Multiply"     => MulInst
