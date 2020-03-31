@@ -24,7 +24,11 @@ object Main extends App {
   val alphanumeric                  = alpha ++ ('0' to '9')
   val identifiers                   = StartRestToken("Identifier", alpha, alphanumeric)
 
-  val src = "(asdf)"
+  val src =
+    """
+      |(asdf)
+      |*
+      |""".trim.stripMargin
 
   new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers).fromString(src)
 

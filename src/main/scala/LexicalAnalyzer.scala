@@ -73,7 +73,7 @@ class LexicalAnalyzer(tabs: Int,
       until('*')
 
       if (s.head.c == EOT || s.tail.head.c == EOT)
-        sys.error(s"unclosed comment ${s.tail.head.at}")
+        sys.error(s"unclosed comment ${s.head.at}")
       else if (s.tail.head.c != '/') {
         s = s.tail
         comment
@@ -82,21 +82,21 @@ class LexicalAnalyzer(tabs: Int,
     }
 
     def recognize(t: Token): Option[(String, String)] = {
-      val first = s.head.c
+      val first = s.head
 
       s = s.tail
 
       t match {
         case StartRestToken(name, start, rest) =>
-          if (start(first)) {
-            Some((name, consume(first, rest)))
+          if (start(first.c)) {
+            Some((name, consume(first.c, rest)))
           } else
             None
         case SimpleToken(name, chars, exclude, excludeError) =>
-          if (chars(first))
+          if (chars(first.c))
             None
           else {
-            val m = consume(first, chars)
+            val m = consume(first.c, chars)
 
             if (exclude(s.head.c))
               sys.error(s"$excludeError ${s.head.at}")
@@ -104,11 +104,11 @@ class LexicalAnalyzer(tabs: Int,
               Some((name, m))
           }
         case DelimitedToken(name, delimiter, pattern, patternError, unclosedError) =>
-          if (first == delimiter) {
+          if (first.c == delimiter) {
             val m = until(delimiter)
 
             if (s.head.c != delimiter)
-              sys.error(s"$unclosedError ${s.head.at}")
+              sys.error(s"$unclosedError ${first.at}")
             else if (pattern.pattern.matcher(m).matches) {
               s = s.tail
               Some((name, m))
@@ -144,7 +144,7 @@ class LexicalAnalyzer(tabs: Int,
 
                 symbols get buf.toString match {
                   case Some(name) => token(name, first)
-                  case None       => sys.error(s"unrecognized symbol: '${buf.toString}' ${s.head.at}")
+                  case None       => sys.error(s"unrecognized symbol: '${buf.toString}' ${first.at}")
                 }
               } else {
                 val first = s.head
