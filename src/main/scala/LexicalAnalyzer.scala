@@ -6,6 +6,7 @@ import scala.util.matching.Regex
 
 object LexicalAnalyzer {
   private val SYMBOL = ('!' to '/' toSet) ++ (':' to '@') ++ ('[' to '`') ++ ('{' to '~')
+  private val EOT    = '\u0004'
 }
 
 class LexicalAnalyzer(tabs: Int,
@@ -26,7 +27,7 @@ class LexicalAnalyzer(tabs: Int,
   def fromString(src: String) = fromSource(Source.fromString(src))
 
   def fromSource(ast: Source) = {
-    var s: Stream[Chr] = ast map (new Chr(_)) toStream
+    var s: Stream[Chr] = (ast map (new Chr(_)) toStream) :+ new Chr(EOT)
 
     curline = 1
     curcol = 1
@@ -38,7 +39,7 @@ class LexicalAnalyzer(tabs: Int,
       val buf = new StringBuilder
 
       def until: (String, Stream[Chr]) =
-        if (s.isEmpty || s.head.c == c)
+        if (s.head.c == EOT || s.head.c == c)
           (buf.toString, s)
         else {
           buf += s.head.c
@@ -49,35 +50,51 @@ class LexicalAnalyzer(tabs: Int,
       until
     }
 
-    def tokenize: Unit =
-      if (s.isEmpty)
+    def comment: Unit = {
+      val (_, r) = until('*')
+
+      if (r.head.c == EOT || r.tail.head.c == EOT)
+        sys.error(s"unclosed comment ${r.tail.head.at}")
+      else if (r.tail.head.c != '/') {
+        s = r.tail
+        comment
+      } else
+        s = r.tail.tail
+    }
+
+    def tokenize: Unit = {
+      val chr = s.head
+
+      s = s.tail
+
+      if (chr.c == EOT)
         token(endOfInput)
       else {
-        val chr = s.head
-
-        s = s.tail
-
         if (!chr.c.isWhitespace)
-          delimiters get chr.c match {
-            case Some(name) => token(name)
-            case None =>
-              if (SYMBOL(chr.c)) {
-                val buf = new StringBuilder
+          if (chr.c == '/' && s.head.c == '*')
+            comment
+          else
+            delimiters get chr.c match {
+              case Some(name) => token(name)
+              case None =>
+                if (SYMBOL(chr.c)) {
+                  val buf = new StringBuilder
 
-                while (s.nonEmpty && !delimiters.contains(s.head.c) && SYMBOL(s.head.c)) {
-                  buf += s.head.c
-                  s = s.tail
-                }
+                  while (s.head.c != EOT && !delimiters.contains(s.head.c) && SYMBOL(s.head.c)) {
+                    buf += s.head.c
+                    s = s.tail
+                  }
 
-                symbols get buf.toString match {
-                  case Some(name) => token(name)
-                  case None       => sys.error(s"unrecognized symbol: '${buf.toString}' [${chr.line}, ${chr.col}]")
+                  symbols get buf.toString match {
+                    case Some(name) => token(name)
+                    case None       => sys.error(s"unrecognized symbol: '${buf.toString}' ${chr.at}")
+                  }
                 }
-              }
-          }
+            }
 
         tokenize
       }
+    }
   }
 
   private class Chr(val c: Char) {
@@ -93,6 +110,8 @@ class LexicalAnalyzer(tabs: Int,
       curcol += tabs - (curcol - 1) % tabs
     else
       curcol += 1
+
+    def at = s"[${line}, ${col}]"
   }
 
 }
