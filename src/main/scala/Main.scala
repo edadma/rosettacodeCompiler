@@ -27,6 +27,7 @@ object Main extends App {
   val src = "(asdf)"
 
   new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers).fromString(src)
+
 //  VirtualMachine.fromString("""
 //      |Datasize: 1 Strings: 2
 //      |"count is: "

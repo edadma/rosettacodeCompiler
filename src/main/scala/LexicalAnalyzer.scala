@@ -30,9 +30,8 @@ class LexicalAnalyzer(tabs: Int,
     curline = 1
     curcol = 1
 
-    var s = (ast map (new Chr(_)) toStream) :+ new Chr(EOT)
+    var s = (ast ++ Iterator(EOT)) map (new Chr(_)) toStream
 
-    println(s.toList)
     tokenize
 
     def token(name: String, first: Chr) = println(f"${first.line}%5d ${first.col}%6d $name%-14s")
@@ -151,10 +150,8 @@ class LexicalAnalyzer(tabs: Int,
                 val first = s.head
 
                 recognize(identifier) match {
-                  case None =>
-                  case Some((name, ident)) =>
-                    println(first, first.at)
-                    value(name, ident, first)
+                  case None                =>
+                  case Some((name, ident)) => value(name, ident, first)
                 }
               }
           }
