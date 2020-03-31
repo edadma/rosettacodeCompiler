@@ -134,6 +134,7 @@ object CodeGenerator {
             op match {
               case "Prti"         => "prti"
               case "Prts"         => "prts"
+              case "Prtc"         => "prtc"
               case "Add"          => "add"
               case "Subtract"     => "sub"
               case "Multiply"     => "mul"
@@ -147,6 +148,8 @@ object CodeGenerator {
               case "NotEqual"     => "ne"
               case "And"          => "and"
               case "Or"           => "or"
+              case "Negate"       => "neg"
+              case "Not"          => "not"
             }
           )
       }
