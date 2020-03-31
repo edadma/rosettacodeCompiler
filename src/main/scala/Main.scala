@@ -31,40 +31,40 @@ object Main extends App {
 //      |   65 halt
 //      |""".trim.stripMargin).run
 
-  val code =
-    capture(CodeGenerator.fromString("""
-                                       |Sequence
-                                       |Sequence
-                                       |;
-                                       |Assign
-                                       |Identifier    count
-                                       |Integer       1
-                                       |While
-                                       |Less
-                                       |Identifier    count
-                                       |Integer       10
-                                       |Sequence
-                                       |Sequence
-                                       |;
-                                       |Sequence
-                                       |Sequence
-                                       |Sequence
-                                       |;
-                                       |Prts
-                                       |String        "count is: "
-                                       |;
-                                       |Prti
-                                       |Identifier    count
-                                       |;
-                                       |Prts
-                                       |String        "\n"
-                                       |;
-                                       |Assign
-                                       |Identifier    count
-                                       |Add
-                                       |Identifier    count
-                                       |Integer       1
-                                       |""".trim.stripMargin))
+//  val code =
+//    capture(CodeGenerator.fromString("""
+//                                       |Sequence
+//                                       |Sequence
+//                                       |;
+//                                       |Assign
+//                                       |Identifier    count
+//                                       |Integer       1
+//                                       |While
+//                                       |Less
+//                                       |Identifier    count
+//                                       |Integer       10
+//                                       |Sequence
+//                                       |Sequence
+//                                       |;
+//                                       |Sequence
+//                                       |Sequence
+//                                       |Sequence
+//                                       |;
+//                                       |Prts
+//                                       |String        "count is: "
+//                                       |;
+//                                       |Prti
+//                                       |Identifier    count
+//                                       |;
+//                                       |Prts
+//                                       |String        "\n"
+//                                       |;
+//                                       |Assign
+//                                       |Identifier    count
+//                                       |Add
+//                                       |Identifier    count
+//                                       |Integer       1
+//                                       |""".trim.stripMargin))
 
 //  val code =
 //    capture(CodeGenerator.fromString("""
@@ -77,18 +77,18 @@ object Main extends App {
 //                                       |;
 //                                       |""".trim.stripMargin))
 
-//  val code =
-//    capture(CodeGenerator.fromString("""
-//                                       |If
-//                                       |Integer 0
-//                                       |If
-//                                       |Prti
-//                                       |Integer       345
-//                                       |;
-//                                       |Prti
-//                                       |Integer       678
-//                                       |;
-//                                      """.trim.stripMargin))
+  val code =
+    capture(CodeGenerator.fromString("""
+                                       |If
+                                       |Integer 0
+                                       |If
+                                       |Prti
+                                       |Integer       345
+                                       |;
+                                       |Prti
+                                       |Integer       678
+                                       |;
+                                      """.trim.stripMargin))
 
   println(code)
   VirtualMachine.fromString(code).run
