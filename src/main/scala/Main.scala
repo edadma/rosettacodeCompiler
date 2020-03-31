@@ -7,6 +7,26 @@ import scala.io.Source
 
 object Main extends App {
 
+  val symbols =
+    Map(
+      "*" -> "Op_multiply",
+      "/" -> "Op_divide"
+    )
+
+  val delimiters =
+    Map(
+      '(' -> "LeftParen",
+      ')' -> "RightParen"
+    )
+
+  val keywords: Map[String, String] = Map()
+  val alpha                         = ('a' to 'z' toSet) ++ ('A' to 'Z')
+  val alphanumeric                  = alpha ++ ('0' to '9')
+  val identifiers                   = StartRestToken("Identifier", alpha, alphanumeric)
+
+  val src = "(asdf)"
+
+  new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers).fromString(src)
 //  VirtualMachine.fromString("""
 //      |Datasize: 1 Strings: 2
 //      |"count is: "
@@ -90,104 +110,104 @@ object Main extends App {
 //                                       |;
 //                                      """.trim.stripMargin))
 
-  val code =
-    capture(CodeGenerator.fromString("""
-        |Sequence
-        |Sequence
-        |Sequence
-        |Sequence
-        |Sequence
-        |;
-        |Assign
-        |Identifier    count
-        |Integer       1
-        |Assign
-        |Identifier    n
-        |Integer       1
-        |Assign
-        |Identifier    limit
-        |Integer       100
-        |While
-        |Less
-        |Identifier    n
-        |Identifier    limit
-        |Sequence
-        |Sequence
-        |Sequence
-        |Sequence
-        |Sequence
-        |;
-        |Assign
-        |Identifier    k
-        |Integer       3
-        |Assign
-        |Identifier    p
-        |Integer       1
-        |Assign
-        |Identifier    n
-        |Add
-        |Identifier    n
-        |Integer       2
-        |While
-        |And
-        |LessEqual
-        |Multiply
-        |Identifier    k
-        |Identifier    k
-        |Identifier    n
-        |Identifier    p
-        |Sequence
-        |Sequence
-        |;
-        |Assign
-        |Identifier    p
-        |NotEqual
-        |Multiply
-        |Divide
-        |Identifier    n
-        |Identifier    k
-        |Identifier    k
-        |Identifier    n
-        |Assign
-        |Identifier    k
-        |Add
-        |Identifier    k
-        |Integer       2
-        |If
-        |Identifier    p
-        |If
-        |Sequence
-        |Sequence
-        |;
-        |Sequence
-        |Sequence
-        |;
-        |Prti
-        |Identifier    n
-        |;
-        |Prts
-        |String        " is prime\n"
-        |;
-        |Assign
-        |Identifier    count
-        |Add
-        |Identifier    count
-        |Integer       1
-        |;
-        |Sequence
-        |Sequence
-        |Sequence
-        |;
-        |Prts
-        |String        "Total primes found: "
-        |;
-        |Prti
-        |Identifier    count
-        |;
-        |Prts
-        |String        "\n"
-        |;
-        |""".trim.stripMargin))
+//  val code =
+//    capture(CodeGenerator.fromString("""
+//        |Sequence
+//        |Sequence
+//        |Sequence
+//        |Sequence
+//        |Sequence
+//        |;
+//        |Assign
+//        |Identifier    count
+//        |Integer       1
+//        |Assign
+//        |Identifier    n
+//        |Integer       1
+//        |Assign
+//        |Identifier    limit
+//        |Integer       100
+//        |While
+//        |Less
+//        |Identifier    n
+//        |Identifier    limit
+//        |Sequence
+//        |Sequence
+//        |Sequence
+//        |Sequence
+//        |Sequence
+//        |;
+//        |Assign
+//        |Identifier    k
+//        |Integer       3
+//        |Assign
+//        |Identifier    p
+//        |Integer       1
+//        |Assign
+//        |Identifier    n
+//        |Add
+//        |Identifier    n
+//        |Integer       2
+//        |While
+//        |And
+//        |LessEqual
+//        |Multiply
+//        |Identifier    k
+//        |Identifier    k
+//        |Identifier    n
+//        |Identifier    p
+//        |Sequence
+//        |Sequence
+//        |;
+//        |Assign
+//        |Identifier    p
+//        |NotEqual
+//        |Multiply
+//        |Divide
+//        |Identifier    n
+//        |Identifier    k
+//        |Identifier    k
+//        |Identifier    n
+//        |Assign
+//        |Identifier    k
+//        |Add
+//        |Identifier    k
+//        |Integer       2
+//        |If
+//        |Identifier    p
+//        |If
+//        |Sequence
+//        |Sequence
+//        |;
+//        |Sequence
+//        |Sequence
+//        |;
+//        |Prti
+//        |Identifier    n
+//        |;
+//        |Prts
+//        |String        " is prime\n"
+//        |;
+//        |Assign
+//        |Identifier    count
+//        |Add
+//        |Identifier    count
+//        |Integer       1
+//        |;
+//        |Sequence
+//        |Sequence
+//        |Sequence
+//        |;
+//        |Prts
+//        |String        "Total primes found: "
+//        |;
+//        |Prti
+//        |Identifier    count
+//        |;
+//        |Prts
+//        |String        "\n"
+//        |;
+//        |""".trim.stripMargin))
 
 //  val code =
 //    capture(CodeGenerator.fromString("""
@@ -361,9 +381,9 @@ object Main extends App {
 //        |Identifier     y0
 //        |Identifier     y_step
 //        |""".trim.stripMargin))
-
-  println(code)
-  VirtualMachine.fromString(code).run
+//
+//  println(code)
+//  VirtualMachine.fromString(code).run
 
   def capture(thunk: => Unit) = {
     val buf = new ByteArrayOutputStream

@@ -27,13 +27,17 @@ class LexicalAnalyzer(tabs: Int,
   def fromString(src: String) = fromSource(Source.fromString(src))
 
   def fromSource(ast: Source) = {
-    var s: Stream[Chr] = (ast map (new Chr(_)) toStream) :+ new Chr(EOT)
-
     curline = 1
     curcol = 1
+
+    var s = (ast map (new Chr(_)) toStream) :+ new Chr(EOT)
+
+    println(s.toList)
     tokenize
 
-    def token(name: String) = println(f"$curline%5d $curcol%6d $name%-14s")
+    def token(name: String, first: Chr) = println(f"${first.line}%5d ${first.col}%6d $name%-14s")
+
+    def value(name: String, v: String, first: Chr) = println(f"${first.line}%5d ${first.col}%6d $name%-14s $v")
 
     def until(c: Char) = {
       val buf = new StringBuilder
@@ -50,7 +54,7 @@ class LexicalAnalyzer(tabs: Int,
       until
     }
 
-    def consume(cs: Set[Char]) = {
+    def consume(first: Char, cs: Set[Char]) = {
       val buf = new StringBuilder
 
       def consume: String =
@@ -62,6 +66,7 @@ class LexicalAnalyzer(tabs: Int,
           consume
         }
 
+      buf += first
       consume
     }
 
@@ -77,23 +82,47 @@ class LexicalAnalyzer(tabs: Int,
         s = s.tail.tail
     }
 
-    def recognize(t: Token) =
+    def recognize(t: Token): Option[(String, String)] = {
+      val first = s.head.c
+
+      s = s.tail
+
       t match {
         case StartRestToken(name, start, rest) =>
-          if (start(s.head.c)) {
-            val first = s.head.c
+          if (start(first)) {
+            Some((name, consume(first, rest)))
+          } else
+            None
+        case SimpleToken(name, chars, exclude, excludeError) =>
+          if (chars(first))
+            None
+          else {
+            val m = consume(first, chars)
 
-            s = s.tail
-
-            val m = first +: consume(rest)
+            if (exclude(s.head.c))
+              sys.error(s"$excludeError ${s.head.at}")
+            else
+              Some((name, m))
           }
-        case SimpleToken(name, pattern, exclude, excludeError)                     =>
         case DelimitedToken(name, delimiter, pattern, patternError, unclosedError) =>
+          if (first == delimiter) {
+            val m = until(delimiter)
+
+            if (s.head.c != delimiter)
+              sys.error(s"$unclosedError ${s.head.at}")
+            else if (pattern.pattern.matcher(m).matches) {
+              s = s.tail
+              Some((name, m))
+            } else
+              sys.error(s"$patternError ${s.head.at}")
+          } else
+            None
       }
+    }
 
     def tokenize: Unit =
       if (s.head.c == EOT)
-        token(endOfInput)
+        token(endOfInput, s.head)
       else {
         if (s.head.c.isWhitespace)
           s = s.tail
@@ -102,11 +131,12 @@ class LexicalAnalyzer(tabs: Int,
         else
           delimiters get s.head.c match {
             case Some(name) =>
+              token(name, s.head)
               s = s.tail
-              token(name)
             case None =>
               if (SYMBOL(s.head.c)) {
-                val buf = new StringBuilder
+                val first = s.head
+                val buf   = new StringBuilder
 
                 while (s.head.c != EOT && !delimiters.contains(s.head.c) && SYMBOL(s.head.c)) {
                   buf += s.head.c
@@ -114,10 +144,19 @@ class LexicalAnalyzer(tabs: Int,
                 }
 
                 symbols get buf.toString match {
-                  case Some(name) => token(name)
+                  case Some(name) => token(name, first)
                   case None       => sys.error(s"unrecognized symbol: '${buf.toString}' ${s.head.at}")
                 }
-              } else {}
+              } else {
+                val first = s.head
+
+                recognize(identifier) match {
+                  case None =>
+                  case Some((name, ident)) =>
+                    println(first, first.at)
+                    value(name, ident, first)
+                }
+              }
           }
 
         tokenize
@@ -139,12 +178,14 @@ class LexicalAnalyzer(tabs: Int,
       curcol += 1
 
     def at = s"[${line}, ${col}]"
+
+    override def toString: String = s"<$c, $line, $col>"
   }
 
 }
 
 abstract class Token
-case class StartRestToken(name: String, start: Set[Char], rest: Set[Char])                         extends Token
-case class SimpleToken(name: String, pattern: Set[Char], exclude: Set[Char], excludeError: String) extends Token
+case class StartRestToken(name: String, start: Set[Char], rest: Set[Char])                       extends Token
+case class SimpleToken(name: String, chars: Set[Char], exclude: Set[Char], excludeError: String) extends Token
 case class DelimitedToken(name: String, delimiter: Char, pattern: Regex, patternError: String, unclosedError: String)
     extends Token
