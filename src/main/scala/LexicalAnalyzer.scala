@@ -35,12 +35,12 @@ class LexicalAnalyzer(tabs: Int,
 
     def token(name: String) = println(f"$curline%5d $curcol%6d $name%-14s")
 
-    def until(c: Char): (String, Stream[Chr]) = {
+    def until(c: Char) = {
       val buf = new StringBuilder
 
-      def until: (String, Stream[Chr]) =
+      def until: String =
         if (s.head.c == EOT || s.head.c == c)
-          (buf.toString, s)
+          buf.toString
         else {
           buf += s.head.c
           s = s.tail
@@ -50,51 +50,78 @@ class LexicalAnalyzer(tabs: Int,
       until
     }
 
-    def comment: Unit = {
-      val (_, r) = until('*')
+    def consume(cs: Set[Char]) = {
+      val buf = new StringBuilder
 
-      if (r.head.c == EOT || r.tail.head.c == EOT)
-        sys.error(s"unclosed comment ${r.tail.head.at}")
-      else if (r.tail.head.c != '/') {
-        s = r.tail
-        comment
-      } else
-        s = r.tail.tail
+      def consume: String =
+        if (s.head.c == EOT || !cs(s.head.c))
+          buf.toString
+        else {
+          buf += s.head.c
+          s = s.tail
+          consume
+        }
+
+      consume
     }
 
-    def tokenize: Unit = {
-      val chr = s.head
+    def comment: Unit = {
+      until('*')
 
-      s = s.tail
+      if (s.head.c == EOT || s.tail.head.c == EOT)
+        sys.error(s"unclosed comment ${s.tail.head.at}")
+      else if (s.tail.head.c != '/') {
+        s = s.tail
+        comment
+      } else
+        s = s.tail.tail
+    }
 
-      if (chr.c == EOT)
+    def recognize(t: Token) =
+      t match {
+        case StartRestToken(name, start, rest) =>
+          if (start(s.head.c)) {
+            val first = s.head.c
+
+            s = s.tail
+
+            val m = first +: consume(rest)
+          }
+        case SimpleToken(name, pattern, exclude, excludeError)                     =>
+        case DelimitedToken(name, delimiter, pattern, patternError, unclosedError) =>
+      }
+
+    def tokenize: Unit =
+      if (s.head.c == EOT)
         token(endOfInput)
       else {
-        if (!chr.c.isWhitespace)
-          if (chr.c == '/' && s.head.c == '*')
-            comment
-          else
-            delimiters get chr.c match {
-              case Some(name) => token(name)
-              case None =>
-                if (SYMBOL(chr.c)) {
-                  val buf = new StringBuilder
+        if (s.head.c.isWhitespace)
+          s = s.tail
+        else if (s.head.c == '/' && s.head.c == '*')
+          comment
+        else
+          delimiters get s.head.c match {
+            case Some(name) =>
+              s = s.tail
+              token(name)
+            case None =>
+              if (SYMBOL(s.head.c)) {
+                val buf = new StringBuilder
 
-                  while (s.head.c != EOT && !delimiters.contains(s.head.c) && SYMBOL(s.head.c)) {
-                    buf += s.head.c
-                    s = s.tail
-                  }
-
-                  symbols get buf.toString match {
-                    case Some(name) => token(name)
-                    case None       => sys.error(s"unrecognized symbol: '${buf.toString}' ${chr.at}")
-                  }
+                while (s.head.c != EOT && !delimiters.contains(s.head.c) && SYMBOL(s.head.c)) {
+                  buf += s.head.c
+                  s = s.tail
                 }
-            }
+
+                symbols get buf.toString match {
+                  case Some(name) => token(name)
+                  case None       => sys.error(s"unrecognized symbol: '${buf.toString}' ${s.head.at}")
+                }
+              } else {}
+          }
 
         tokenize
       }
-    }
   }
 
   private class Chr(val c: Char) {
@@ -117,7 +144,7 @@ class LexicalAnalyzer(tabs: Int,
 }
 
 abstract class Token
-case class StartRestToken(name: String, start: Regex, rest: Regex)                         extends Token
-case class SimpleToken(name: String, pattern: Regex, exclude: Regex, excludeError: String) extends Token
+case class StartRestToken(name: String, start: Set[Char], rest: Set[Char])                         extends Token
+case class SimpleToken(name: String, pattern: Set[Char], exclude: Set[Char], excludeError: String) extends Token
 case class DelimitedToken(name: String, delimiter: Char, pattern: Regex, patternError: String, unclosedError: String)
     extends Token
