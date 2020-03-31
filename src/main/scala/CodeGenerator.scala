@@ -1,6 +1,6 @@
 package xyz.hyperreal.rosettacodeCompiler
 
-import scala.collection.mutable.{ArrayBuffer, LinkedHashMap}
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 import scala.io.Source
 
 object CodeGenerator {
@@ -10,7 +10,7 @@ object CodeGenerator {
   def fromString(src: String) = fromSource(Source.fromString(src))
 
   def fromSource(ast: Source) = {
-    val vars              = new LinkedHashMap[String, Int]
+    val vars              = new HashMap[String, Int]
     val strings           = new ArrayBuffer[String]
     val code              = new ArrayBuffer[String]
     var s: Stream[String] = ast.getLines.toStream
