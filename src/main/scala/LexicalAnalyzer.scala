@@ -1,6 +1,5 @@
 package xyz.hyperreal.rosettacodeCompiler
 
-import scala.collection.mutable.{ArrayBuffer, HashMap}
 import scala.io.Source
 import scala.util.matching.Regex
 
@@ -94,9 +93,9 @@ class LexicalAnalyzer(tabs: Int,
 
       t match {
         case StartRestToken(name, start, rest) =>
-          if (start(first.head.c)) {
+          if (start(first.head.c))
             Some((name, consume(first.head.c, rest)))
-          } else {
+          else {
             s = first
             None
           }
