@@ -69,53 +69,58 @@ class LexicalAnalyzer(tabs: Int,
       consume
     }
 
-    def comment: Unit = {
+    def comment(start: Chr): Unit = {
       until('*')
 
       if (s.head.c == EOT || s.tail.head.c == EOT)
-        sys.error(s"unclosed comment ${s.head.at}")
+        sys.error(s"unclosed comment ${start.at}")
       else if (s.tail.head.c != '/') {
         s = s.tail
-        comment
+        comment(start)
       } else
         s = s.tail.tail
     }
 
     def recognize(t: Token): Option[(String, String)] = {
-      val first = s.head
+      val first = s
 
       s = s.tail
 
       t match {
         case StartRestToken(name, start, rest) =>
-          if (start(first.c)) {
-            Some((name, consume(first.c, rest)))
-          } else
+          if (start(first.head.c)) {
+            Some((name, consume(first.head.c, rest)))
+          } else {
+            s = first
             None
+          }
         case SimpleToken(name, chars, exclude, excludeError) =>
-          if (chars(first.c))
-            None
-          else {
-            val m = consume(first.c, chars)
+          if (chars(first.head.c)) {
+            val m = consume(first.head.c, chars)
 
             if (exclude(s.head.c))
               sys.error(s"$excludeError ${s.head.at}")
             else
               Some((name, m))
+          } else {
+            s = first
+            None
           }
         case DelimitedToken(name, delimiter, pattern, patternError, unclosedError) =>
-          if (first.c == delimiter) {
+          if (first.head.c == delimiter) {
             val m = until(delimiter)
 
             if (s.head.c != delimiter)
-              sys.error(s"$unclosedError ${first.at}")
+              sys.error(s"$unclosedError ${first.head.at}")
             else if (pattern.pattern.matcher(m).matches) {
               s = s.tail
               Some((name, m))
             } else
               sys.error(s"$patternError ${s.head.at}")
-          } else
+          } else {
+            s = first
             None
+          }
       }
     }
 
@@ -125,8 +130,8 @@ class LexicalAnalyzer(tabs: Int,
       else {
         if (s.head.c.isWhitespace)
           s = s.tail
-        else if (s.head.c == '/' && s.head.c == '*')
-          comment
+        else if (s.head.c == '/' && s.tail.head.c == '*')
+          comment(s.head)
         else
           delimiters get s.head.c match {
             case Some(name) =>
@@ -150,8 +155,24 @@ class LexicalAnalyzer(tabs: Int,
                 val first = s.head
 
                 recognize(identifier) match {
-                  case None                =>
-                  case Some((name, ident)) => value(name, ident, first)
+                  case None =>
+                    find(0)
+
+                    @scala.annotation.tailrec
+                    def find(t: Int): Unit = {
+                      if (t == tokens.length)
+                        sys.error(s"unrecognized character ${first.at}")
+                      else
+                        recognize(tokens(t)) match {
+                          case None            => find(t + 1)
+                          case Some((name, v)) => value(name, v, first)
+                        }
+                    }
+                  case Some((name, ident)) =>
+                    keywords get ident match {
+                      case None          => value(name, ident, first)
+                      case Some(keyword) => token(keyword, first)
+                    }
                 }
               }
           }

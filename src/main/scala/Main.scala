@@ -16,21 +16,35 @@ object Main extends App {
   val delimiters =
     Map(
       '(' -> "LeftParen",
-      ')' -> "RightParen"
+      ')' -> "RightParen",
+      '{' -> "LeftBrace",
+      '}' -> "RightBrace",
+      ';' -> "Semicolon",
+      ',' -> "Comma"
     )
 
-  val keywords: Map[String, String] = Map()
-  val alpha                         = ('a' to 'z' toSet) ++ ('A' to 'Z')
-  val alphanumeric                  = alpha ++ ('0' to '9')
-  val identifiers                   = StartRestToken("Identifier", alpha, alphanumeric)
+  val keywords =
+    Map(
+      "if"    -> "Keyword_if",
+      "else"  -> "Keyword_else",
+      "while" -> "Keyword_while",
+      "print" -> "Keyword_print",
+      "putc"  -> "Keyword_putc"
+    )
+  val alpha        = ('a' to 'z' toSet) ++ ('A' to 'Z')
+  val numeric      = '0' to '9' toSet
+  val alphanumeric = alpha ++ numeric
+  val identifiers  = StartRestToken("Identifier", alpha, alphanumeric)
+  val integers     = SimpleToken("Integer", numeric, alpha, "alpha characters may not follow right after a number")
 
   val src =
     """
-      |(asdf)
-      |*
+      |(asdf) /* qwer */
+      |* while
+      |123 4576
       |""".trim.stripMargin
 
-  new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers).fromString(src)
+  new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers, integers).fromString(src)
 
 //  VirtualMachine.fromString("""
 //      |Datasize: 1 Strings: 2
