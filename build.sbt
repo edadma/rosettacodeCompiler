@@ -30,7 +30,7 @@ testFrameworks += new TestFramework( "utest.runner.Framework" )
 
 libraryDependencies ++= Seq(
   "com.lihaoyi" %%% "fastparse" % "1.0.0",
-  "com.github.scopt" %%% "scopt" % "3.7.0"
+  "com.github.scopt" %%% "scopt" % "3.7.1"
 )
 
 publishMavenStyle := true

@@ -7,26 +7,30 @@ import scala.io.Source
 
 object Main extends App {
 
-//  val src =
-//    """
-//      |/*
-//      |  Hello world
-//      | */
-//      |print("Hello, World!\n");
-//      |""".trim.stripMargin
-
-//  val src =
-//    """
+//  """
 //    |/*
-//    |  Show Ident and Integers
+//    | Simple prime number generator
 //    | */
-//    |phoenix_number = 142857;
-//    |print(phoenix_number, "\n");
-//    |""".trim.stripMargin
-//
-//  LexicalAnalyzer.apply.fromString(src)
+//    |count = 1;
+//    |n = 1;
+//    |limit = 100;
+//    |while (n < limit) {
+//    |    k=3;
+//    |    p=1;
+//    |    n=n+2;
+//    |    while ((k*k<=n) && (p)) {
+//    |        p=n/k*k!=n;
+//    |        k=k+2;
+//    |    }
+//    |    if (p) {
+//    |        print(n, " is prime\n");
+//    |        count = count + 1;
+//    |    }
+//    |}
+//    |print("Total primes found: ", count, "\n");
+//    |""".stripMargin))
 
-//  val ast =
+  //  val ast =
 //    """
 //      |Sequence
 //      |;
@@ -255,185 +259,185 @@ object Main extends App {
 //        |;
 //        |""".trim.stripMargin))
 
-  val ast =
-    """
-      |Sequence
-      |;
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |;
-      |Assign
-      |Identifier     left_edge
-      |Negate
-      |Integer        420
-      |;
-      |Assign
-      |Identifier     right_edge
-      |Integer        300
-      |Assign
-      |Identifier     top_edge
-      |Integer        300
-      |Assign
-      |Identifier     bottom_edge
-      |Negate
-      |Integer        300
-      |;
-      |Assign
-      |Identifier     x_step
-      |Integer        7
-      |Assign
-      |Identifier     y_step
-      |Integer        15
-      |Assign
-      |Identifier     max_iter
-      |Integer        200
-      |Assign
-      |Identifier     y0
-      |Identifier     top_edge
-      |While
-      |Greater
-      |Identifier     y0
-      |Identifier     bottom_edge
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |;
-      |Assign
-      |Identifier     x0
-      |Identifier     left_edge
-      |While
-      |Less
-      |Identifier     x0
-      |Identifier     right_edge
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |;
-      |Assign
-      |Identifier     y
-      |Integer        0
-      |Assign
-      |Identifier     x
-      |Integer        0
-      |Assign
-      |Identifier     the_char
-      |Integer        32
-      |Assign
-      |Identifier     i
-      |Integer        0
-      |While
-      |Less
-      |Identifier     i
-      |Identifier     max_iter
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |Sequence
-      |;
-      |Assign
-      |Identifier     x_x
-      |Divide
-      |Multiply
-      |Identifier     x
-      |Identifier     x
-      |Integer        200
-      |Assign
-      |Identifier     y_y
-      |Divide
-      |Multiply
-      |Identifier     y
-      |Identifier     y
-      |Integer        200
-      |If
-      |Greater
-      |Add
-      |Identifier     x_x
-      |Identifier     y_y
-      |Integer        800
-      |If
-      |Sequence
-      |Sequence
-      |Sequence
-      |;
-      |Assign
-      |Identifier     the_char
-      |Add
-      |Integer        48
-      |Identifier     i
-      |If
-      |Greater
-      |Identifier     i
-      |Integer        9
-      |If
-      |Sequence
-      |;
-      |Assign
-      |Identifier     the_char
-      |Integer        64
-      |;
-      |Assign
-      |Identifier     i
-      |Identifier     max_iter
-      |;
-      |Assign
-      |Identifier     y
-      |Add
-      |Divide
-      |Multiply
-      |Identifier     x
-      |Identifier     y
-      |Integer        100
-      |Identifier     y0
-      |Assign
-      |Identifier     x
-      |Add
-      |Subtract
-      |Identifier     x_x
-      |Identifier     y_y
-      |Identifier     x0
-      |Assign
-      |Identifier     i
-      |Add
-      |Identifier     i
-      |Integer        1
-      |Prtc
-      |Identifier     the_char
-      |;
-      |Assign
-      |Identifier     x0
-      |Add
-      |Identifier     x0
-      |Identifier     x_step
-      |Prtc
-      |Integer        10
-      |;
-      |Assign
-      |Identifier     y0
-      |Subtract
-      |Identifier     y0
-      |Identifier     y_step
-      |""".trim.stripMargin
-
-  val code =
-    capture(CodeGenerator.fromString(ast))
+//  val ast =
+//    """
+//      |Sequence
+//      |;
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Assign
+//      |Identifier     left_edge
+//      |Negate
+//      |Integer        420
+//      |;
+//      |Assign
+//      |Identifier     right_edge
+//      |Integer        300
+//      |Assign
+//      |Identifier     top_edge
+//      |Integer        300
+//      |Assign
+//      |Identifier     bottom_edge
+//      |Negate
+//      |Integer        300
+//      |;
+//      |Assign
+//      |Identifier     x_step
+//      |Integer        7
+//      |Assign
+//      |Identifier     y_step
+//      |Integer        15
+//      |Assign
+//      |Identifier     max_iter
+//      |Integer        200
+//      |Assign
+//      |Identifier     y0
+//      |Identifier     top_edge
+//      |While
+//      |Greater
+//      |Identifier     y0
+//      |Identifier     bottom_edge
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Assign
+//      |Identifier     x0
+//      |Identifier     left_edge
+//      |While
+//      |Less
+//      |Identifier     x0
+//      |Identifier     right_edge
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Assign
+//      |Identifier     y
+//      |Integer        0
+//      |Assign
+//      |Identifier     x
+//      |Integer        0
+//      |Assign
+//      |Identifier     the_char
+//      |Integer        32
+//      |Assign
+//      |Identifier     i
+//      |Integer        0
+//      |While
+//      |Less
+//      |Identifier     i
+//      |Identifier     max_iter
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Assign
+//      |Identifier     x_x
+//      |Divide
+//      |Multiply
+//      |Identifier     x
+//      |Identifier     x
+//      |Integer        200
+//      |Assign
+//      |Identifier     y_y
+//      |Divide
+//      |Multiply
+//      |Identifier     y
+//      |Identifier     y
+//      |Integer        200
+//      |If
+//      |Greater
+//      |Add
+//      |Identifier     x_x
+//      |Identifier     y_y
+//      |Integer        800
+//      |If
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Assign
+//      |Identifier     the_char
+//      |Add
+//      |Integer        48
+//      |Identifier     i
+//      |If
+//      |Greater
+//      |Identifier     i
+//      |Integer        9
+//      |If
+//      |Sequence
+//      |;
+//      |Assign
+//      |Identifier     the_char
+//      |Integer        64
+//      |;
+//      |Assign
+//      |Identifier     i
+//      |Identifier     max_iter
+//      |;
+//      |Assign
+//      |Identifier     y
+//      |Add
+//      |Divide
+//      |Multiply
+//      |Identifier     x
+//      |Identifier     y
+//      |Integer        100
+//      |Identifier     y0
+//      |Assign
+//      |Identifier     x
+//      |Add
+//      |Subtract
+//      |Identifier     x_x
+//      |Identifier     y_y
+//      |Identifier     x0
+//      |Assign
+//      |Identifier     i
+//      |Add
+//      |Identifier     i
+//      |Integer        1
+//      |Prtc
+//      |Identifier     the_char
+//      |;
+//      |Assign
+//      |Identifier     x0
+//      |Add
+//      |Identifier     x0
+//      |Identifier     x_step
+//      |Prtc
+//      |Integer        10
+//      |;
+//      |Assign
+//      |Identifier     y0
+//      |Subtract
+//      |Identifier     y0
+//      |Identifier     y_step
+//      |""".trim.stripMargin
+//
+//  val code =
+//    capture(CodeGenerator.fromString(ast))
 
 //  println(code)
 //  VirtualMachine.fromString(code).run
-  ASTInterpreter.fromString(ast)
+//  ASTInterpreter.fromString(ast)
 
   def capture(thunk: => Unit) = {
     val buf = new ByteArrayOutputStream

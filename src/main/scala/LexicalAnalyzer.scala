@@ -92,7 +92,7 @@ class LexicalAnalyzer(tabs: Int,
 
     tokenize
 
-    def token(name: String, first: Chr) = println(f"${first.line}%5d ${first.col}%6d $name%-14s")
+    def token(name: String, first: Chr) = println(f"${first.line}%5d ${first.col}%6d $name")
 
     def value(name: String, v: String, first: Chr) = println(f"${first.line}%5d ${first.col}%6d $name%-14s $v")
 
