@@ -7,28 +7,38 @@ import scala.io.Source
 
 object Main extends App {
 
-//  """
-//    |/*
-//    | Simple prime number generator
-//    | */
-//    |count = 1;
-//    |n = 1;
-//    |limit = 100;
-//    |while (n < limit) {
-//    |    k=3;
-//    |    p=1;
-//    |    n=n+2;
-//    |    while ((k*k<=n) && (p)) {
-//    |        p=n/k*k!=n;
-//    |        k=k+2;
-//    |    }
-//    |    if (p) {
-//    |        print(n, " is prime\n");
-//    |        count = count + 1;
-//    |    }
-//    |}
-//    |print("Total primes found: ", count, "\n");
-//    |""".stripMargin))
+//  val tokens = capture(LexicalAnalyzer.apply.fromString("""
+//                                                          |/*
+//                                                          | Simple prime number generator
+//                                                          | */
+//                                                          |count = 1;
+//                                                          |n = 1;
+//                                                          |limit = 100;
+//                                                          |while (n < limit) {
+//                                                          |    k=3;
+//                                                          |    p=1;
+//                                                          |    n=n+2;
+//                                                          |    while ((k*k<=n) && (p)) {
+//                                                          |        p=n/k*k!=n;
+//                                                          |        k=k+2;
+//                                                          |    }
+//                                                          |    if (p) {
+//                                                          |        print(n, " is prime\n");
+//                                                          |        count = count + 1;
+//                                                          |    }
+//                                                          |}
+//                                                          |print("Total primes found: ", count, "\n");
+//                                                          |""".stripMargin))
+
+  val tokens = capture(LexicalAnalyzer.apply.fromString("""
+                                                          |count = 1;
+                                                          |while (count < 10) {
+                                                          |    print("count is: ", count, "\n");
+                                                          |    count = count + 1;
+                                                          |}
+                                                          |""".stripMargin))
+
+  SyntaxAnalyzer.fromString(tokens)
 
   //  val ast =
 //    """
@@ -40,6 +50,7 @@ object Main extends App {
 //      |String        "Hello, World!\n"
 //      |;
 //      |""".trim.stripMargin
+
 //  val ast =
 //    """
 //    |Sequence
@@ -74,6 +85,105 @@ object Main extends App {
 //    |Identifier    count
 //    |Integer       1
 //    |""".trim.stripMargin
+
+//  val ast =
+//    """
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Assign
+//      |Identifier    count
+//      |Integer       1
+//      |Assign
+//      |Identifier    n
+//      |Integer       1
+//      |Assign
+//      |Identifier    limit
+//      |Integer       100
+//      |While
+//      |Less
+//      |Identifier    n
+//      |Identifier    limit
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Assign
+//      |Identifier    k
+//      |Integer       3
+//      |Assign
+//      |Identifier    p
+//      |Integer       1
+//      |Assign
+//      |Identifier    n
+//      |Add
+//      |Identifier    n
+//      |Integer       2
+//      |While
+//      |And
+//      |LessEqual
+//      |Multiply
+//      |Identifier    k
+//      |Identifier    k
+//      |Identifier    n
+//      |Identifier    p
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Assign
+//      |Identifier    p
+//      |NotEqual
+//      |Multiply
+//      |Divide
+//      |Identifier    n
+//      |Identifier    k
+//      |Identifier    k
+//      |Identifier    n
+//      |Assign
+//      |Identifier    k
+//      |Add
+//      |Identifier    k
+//      |Integer       2
+//      |If
+//      |Identifier    p
+//      |If
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Prti
+//      |Identifier    n
+//      |;
+//      |Prts
+//      |String        " is prime\n"
+//      |;
+//      |Assign
+//      |Identifier    count
+//      |Add
+//      |Identifier    count
+//      |Integer       1
+//      |;
+//      |Sequence
+//      |Sequence
+//      |Sequence
+//      |;
+//      |Prts
+//      |String        "Total primes found: "
+//      |;
+//      |Prti
+//      |Identifier    count
+//      |;
+//      |Prts
+//      |String        "\n"
+//      |;
+//      |""".trim.stripMargin
 //
 //  ASTInterpreter.fromString(ast)
 
