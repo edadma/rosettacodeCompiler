@@ -15,18 +15,31 @@ object Main extends App {
 //      |print("Hello, World!\n");
 //      |""".trim.stripMargin
 
-  val src =
+//  val src =
+//    """
+//    |/*
+//    |  Show Ident and Integers
+//    | */
+//    |phoenix_number = 142857;
+//    |print(phoenix_number, "\n");
+//    |""".trim.stripMargin
+//
+//  LexicalAnalyzer.apply.fromString(src)
+
+  val ast =
     """
-    |/*
-    |  Show Ident and Integers
-    | */
-    |phoenix_number = 142857;
-    |print(phoenix_number, "\n");
-    |""".trim.stripMargin
+      |Sequence
+      |;
+      |Sequence
+      |;
+      |Prts
+      |String        "Hello, World!\n"
+      |;
+      |""".trim.stripMargin
 
-  LexicalAnalyzer.apply.fromString(src)
+  ASTInterpreter.fromString(ast)
 
-//  VirtualMachine.fromString("""
+  //  VirtualMachine.fromString("""
 //      |Datasize: 1 Strings: 2
 //      |"count is: "
 //      |"\n"
