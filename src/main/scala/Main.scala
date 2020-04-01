@@ -26,16 +26,50 @@ object Main extends App {
 //
 //  LexicalAnalyzer.apply.fromString(src)
 
+//  val ast =
+//    """
+//      |Sequence
+//      |;
+//      |Sequence
+//      |;
+//      |Prts
+//      |String        "Hello, World!\n"
+//      |;
+//      |""".trim.stripMargin
   val ast =
     """
-      |Sequence
-      |;
-      |Sequence
-      |;
-      |Prts
-      |String        "Hello, World!\n"
-      |;
-      |""".trim.stripMargin
+    |Sequence
+    |Sequence
+    |;
+    |Assign
+    |Identifier    count
+    |Integer       1
+    |While
+    |Less
+    |Identifier    count
+    |Integer       10
+    |Sequence
+    |Sequence
+    |;
+    |Sequence
+    |Sequence
+    |Sequence
+    |;
+    |Prts
+    |String        "count is: "
+    |;
+    |Prti
+    |Identifier    count
+    |;
+    |Prts
+    |String        "\n"
+    |;
+    |Assign
+    |Identifier    count
+    |Add
+    |Identifier    count
+    |Integer       1
+    |""".trim.stripMargin
 
   ASTInterpreter.fromString(ast)
 

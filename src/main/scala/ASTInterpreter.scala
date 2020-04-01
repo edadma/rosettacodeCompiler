@@ -27,6 +27,10 @@ object ASTInterpreter {
 
     val vars = new mutable.HashMap[String, Any]
 
+    def interpInt(n: Node) = interp(n).asInstanceOf[Int]
+
+    def interpBoolean(n: Node) = interp(n).asInstanceOf[Boolean]
+
     def interp(n: Node): Any =
       n match {
         case TerminalNode => null
@@ -45,7 +49,11 @@ object ASTInterpreter {
           value.substring(1, value.length - 1).replace("\\n", "\n").replace("\\\\", "\\")
         case BranchNode("Assign", LeafNode(_, name), exp) => vars(name) = interp(exp)
         case BranchNode("Sequence", l, r)                 => interp(l); interp(r)
-        case BranchNode("Prts", a, _)                     => print(interp(a))
+        case BranchNode("Prts" | "Prti", a, _)            => print(interp(a))
+        case BranchNode("Prtc", a, _)                     => print(interpInt(a).toChar)
+        case BranchNode("Add", l, r)                      => interpInt(l) + interpInt(r)
+        case BranchNode("Less", l, r)                     => interpInt(l) < interpInt(r)
+        case BranchNode("While", l, r)                    => while (interpBoolean(l)) interp(r)
       }
 
     interp(load)
