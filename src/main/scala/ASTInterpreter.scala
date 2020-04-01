@@ -70,11 +70,11 @@ object ASTInterpreter {
       }
 
     interp(load)
-
   }
 
   abstract class Node
   case class BranchNode(name: String, left: Node, right: Node) extends Node
   case class LeafNode(name: String, value: String)             extends Node
   case object TerminalNode                                     extends Node
+
 }
