@@ -15,15 +15,12 @@ object ASTInterpreter {
     def load: Node =
       if (!lines.hasNext)
         TerminalNode
-      else {
-        val node = lines.next.split(" +", 2)
-
-        node match {
+      else
+        lines.next.split(" +", 2) match {
           case Array(name, value) => LeafNode(name, value)
           case Array(";")         => TerminalNode
           case Array(name)        => BranchNode(name, load, load)
         }
-      }
 
     val vars = new mutable.HashMap[String, Any]
 
