@@ -6,6 +6,59 @@ import scala.util.matching.Regex
 object LexicalAnalyzer {
   private val SYMBOL = ('!' to '/' toSet) ++ (':' to '@') ++ ('[' to '`') ++ ('{' to '~')
   private val EOT    = '\u0004'
+
+  val symbols =
+    Map(
+      "*"  -> "Op_multiply",
+      "/"  -> "Op_divide",
+      "%"  -> "Op_mod",
+      "+"  -> "Op_add",
+      "-"  -> "Op_subtract",
+      "-"  -> "Op_negate",
+      "<"  -> "Op_less",
+      "<=" -> "Op_lessequal",
+      ">"  -> "Op_greater",
+      ">=" -> "Op_greaterequal",
+      "==" -> "Op_equal",
+      "!=" -> "Op_notequal",
+      "!"  -> "Op_not",
+      "="  -> "Op_assign",
+      "&&" -> "Op_and",
+      "¦¦" -> "Op_or"
+    )
+
+  val delimiters =
+    Map(
+      '(' -> "LeftParen",
+      ')' -> "RightParen",
+      '{' -> "LeftBrace",
+      '}' -> "RightBrace",
+      ';' -> "Semicolon",
+      ',' -> "Comma"
+    )
+
+  val keywords =
+    Map(
+      "if"    -> "Keyword_if",
+      "else"  -> "Keyword_else",
+      "while" -> "Keyword_while",
+      "print" -> "Keyword_print",
+      "putc"  -> "Keyword_putc"
+    )
+  val alpha        = ('a' to 'z' toSet) ++ ('A' to 'Z')
+  val numeric      = '0' to '9' toSet
+  val alphanumeric = alpha ++ numeric
+  val identifiers  = StartRestToken("Identifier", alpha + '_', alphanumeric + '_')
+  val integers     = SimpleToken("Integer", numeric, alpha, "alpha characters may not follow right after a number")
+
+  val characters =
+    DelimitedToken("Integer", '\'', "[^'\n]|\\n|\\\\" r, "invalid character literal", "unclosed character literal")
+
+  val strings =
+    DelimitedToken("String", '"', "[^\"\n]*" r, "invalid string literal", "unclosed string literal")
+
+  def apply =
+    new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers, integers, characters, strings)
 }
 
 class LexicalAnalyzer(tabs: Int,

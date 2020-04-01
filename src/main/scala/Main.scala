@@ -7,51 +7,24 @@ import scala.io.Source
 
 object Main extends App {
 
-  val symbols =
-    Map(
-      "*" -> "Op_multiply",
-      "/" -> "Op_divide"
-    )
-
-  val delimiters =
-    Map(
-      '(' -> "LeftParen",
-      ')' -> "RightParen",
-      '{' -> "LeftBrace",
-      '}' -> "RightBrace",
-      ';' -> "Semicolon",
-      ',' -> "Comma"
-    )
-
-  val keywords =
-    Map(
-      "if"    -> "Keyword_if",
-      "else"  -> "Keyword_else",
-      "while" -> "Keyword_while",
-      "print" -> "Keyword_print",
-      "putc"  -> "Keyword_putc"
-    )
-  val alpha        = ('a' to 'z' toSet) ++ ('A' to 'Z')
-  val numeric      = '0' to '9' toSet
-  val alphanumeric = alpha ++ numeric
-  val identifiers  = StartRestToken("Identifier", alpha, alphanumeric)
-  val integers     = SimpleToken("Integer", numeric, alpha, "alpha characters may not follow right after a number")
-
-  val characters =
-    DelimitedToken("Integer", '\'', "[^'\n]|\\n|\\\\" r, "invalid character literal", "unclosed character literal")
-
-  val strings =
-    DelimitedToken("String", '"', "[^\"\n]*" r, "invalid string literal", "unclosed string literal")
+//  val src =
+//    """
+//      |/*
+//      |  Hello world
+//      | */
+//      |print("Hello, World!\n");
+//      |""".trim.stripMargin
 
   val src =
     """
-      |(asdf) /* qwer */
-      |* while
-      |"zxcv" 'a' 4576
-      |""".trim.stripMargin
+    |/*
+    |  Show Ident and Integers
+    | */
+    |phoenix_number = 142857;
+    |print(phoenix_number, "\n");
+    |""".trim.stripMargin
 
-  new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers, integers, characters, strings)
-    .fromString(src)
+  LexicalAnalyzer.apply.fromString(src)
 
 //  VirtualMachine.fromString("""
 //      |Datasize: 1 Strings: 2
