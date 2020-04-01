@@ -37,14 +37,21 @@ object Main extends App {
   val identifiers  = StartRestToken("Identifier", alpha, alphanumeric)
   val integers     = SimpleToken("Integer", numeric, alpha, "alpha characters may not follow right after a number")
 
+  val characters =
+    DelimitedToken("Integer", '\'', "[^'\n]|\\n|\\\\" r, "invalid character literal", "unclosed character literal")
+
+  val strings =
+    DelimitedToken("String", '"', "[^\"\n]*" r, "invalid string literal", "unclosed string literal")
+
   val src =
     """
       |(asdf) /* qwer */
       |* while
-      |123 4576
+      |"zxcv" 'a' 4576
       |""".trim.stripMargin
 
-  new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers, integers).fromString(src)
+  new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers, integers, characters, strings)
+    .fromString(src)
 
 //  VirtualMachine.fromString("""
 //      |Datasize: 1 Strings: 2

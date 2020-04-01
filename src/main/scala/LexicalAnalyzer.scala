@@ -19,6 +19,12 @@ class LexicalAnalyzer(tabs: Int,
 
   import LexicalAnalyzer._
 
+  private val tokenDelimiters =
+    tokens flatMap {
+      case DelimitedToken(_, d, _, _, _) => List(d)
+      case _                             => Nil
+    } toSet
+
   private var curline: Int = _
   private var curcol: Int  = _
 
@@ -114,7 +120,7 @@ class LexicalAnalyzer(tabs: Int,
               sys.error(s"$unclosedError ${first.head.at}")
             else if (pattern.pattern.matcher(m).matches) {
               s = s.tail
-              Some((name, m))
+              Some((name, s"$delimiter$m$delimiter"))
             } else
               sys.error(s"$patternError ${s.head.at}")
           } else {
@@ -138,11 +144,12 @@ class LexicalAnalyzer(tabs: Int,
               token(name, s.head)
               s = s.tail
             case None =>
-              if (SYMBOL(s.head.c)) {
+              if (SYMBOL(s.head.c) && !tokenDelimiters.contains(s.head.c)) {
                 val first = s.head
                 val buf   = new StringBuilder
 
-                while (s.head.c != EOT && !delimiters.contains(s.head.c) && SYMBOL(s.head.c)) {
+                while (s.head.c != EOT && !delimiters.contains(s.head.c) && !tokenDelimiters.contains(s.head.c) &&
+                       SYMBOL(s.head.c)) {
                   buf += s.head.c
                   s = s.tail
                 }
@@ -159,7 +166,7 @@ class LexicalAnalyzer(tabs: Int,
                     find(0)
 
                     @scala.annotation.tailrec
-                    def find(t: Int): Unit = {
+                    def find(t: Int): Unit =
                       if (t == tokens.length)
                         sys.error(s"unrecognized character ${first.at}")
                       else
@@ -167,7 +174,6 @@ class LexicalAnalyzer(tabs: Int,
                           case None            => find(t + 1)
                           case Some((name, v)) => value(name, v, first)
                         }
-                    }
                   case Some((name, ident)) =>
                     keywords get ident match {
                       case None          => value(name, ident, first)
