@@ -1,11 +1,50 @@
 package xyz.hyperreal.rosettacodeCompiler
 
 import java.io.ByteArrayOutputStream
+import java.nio.file.Path
 
 import scala.collection.mutable
 import scala.io.Source
 
 object Main extends App {
+
+  case class Options(
+      lexer: Boolean = false,
+      input: Option[Path] = None,
+      output: Option[Path] = None
+  )
+
+  private val parser = new scopt.OptionParser[Options]("rosettacodeCompiler") {
+    head("Rosetta Code Compiler", "v0.1")
+    help("help").text("print this usage text").abbr("h")
+    opt[Unit]('l', "lexer")
+      .action((_, c) => c.copy(lexer = true))
+      .text("run lexer only")
+    version("version").text("print the version").abbr("v")
+  }
+
+  parser.parse(args, Options()) match {
+    case Some(options) =>
+//      options match {
+//        case Options(None, None, None, None, None)         => REPL()
+//        case Options(None, None, Some(path), None, None)   => run(read(path))
+//        case Options(None, None, None, Some(script), None) => run(script)
+//        case Options(None, None, None, None, Some(script)) =>
+//          println(s"${Console.YELLOW}${run(script)}${Console.RESET}")
+//        case Options(None, Some(module), None, None, None)       => load(Paths.get("."), module)
+//        case Options(Some(path), Some(module), None, None, None) => load(path, module)
+//        case _ => parser.showUsageAsError
+//      }
+      if (options.lexer)
+        LexicalAnalyzer.apply.fromStdin
+      else {
+        println("full compiler not yet implemented")
+        sys.exit(1)
+      }
+    case None => sys.exit(1)
+  }
+
+//  val tokens = capture(LexicalAnalyzer.apply.fromStdin)
 
 //  val tokens = capture(LexicalAnalyzer.apply.fromString("""
 //                                                          |/*
@@ -30,15 +69,15 @@ object Main extends App {
 //                                                          |print("Total primes found: ", count, "\n");
 //                                                          |""".stripMargin))
 
-  val tokens = capture(LexicalAnalyzer.apply.fromString("""
-                                                          |count = 1;
-                                                          |while (count < 10) {
-                                                          |    print("count is: ", count, "\n");
-                                                          |    count = count + 1;
-                                                          |}
-                                                          |""".stripMargin))
-
-  SyntaxAnalyzer.fromString(tokens)
+//  val tokens = capture(LexicalAnalyzer.apply.fromString("""
+//                                                          |count = 1;
+//                                                          |while (count < 10) {
+//                                                          |    print("count is: ", count, "\n");
+//                                                          |    count = count + 1;
+//                                                          |}
+//                                                          |""".stripMargin))
+//
+//  SyntaxAnalyzer.fromString(tokens)
 
   //  val ast =
 //    """
