@@ -48,7 +48,7 @@ object SyntaxAnalyzer extends App {
   def pow(x: Int, n: Int) = {
     def pow(y: Int, x: Int, n: Int): Int =
       n match {
-        case 0 => y
+        case 0 => 1
         case 1 => x * y
         case _ if n % 2 == 0 => pow(y, x * x, n / 2)
         case _ => pow(x * y, x * x, (n - 1) / 2)
