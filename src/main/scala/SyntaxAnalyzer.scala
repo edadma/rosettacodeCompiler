@@ -46,22 +46,15 @@ object SyntaxAnalyzer extends App {
   }
 
   def pow(x: Int, n: Int) = {
-    def f(x: Int, n: Int, y: Int): Int = {
-      def g(x: Int, n: Int): Int =
-        if (n % 2 == 0)
-          g(x * x, n / 2)
-        else
-          f(x, n - 1, x * y)
+    def pow(y: Int, x: Int, n: Int): Int =
+      n match {
+        case 0 => y
+        case 1 => x * y
+        case _ if n % 2 == 0 => pow(y, x * x, n / 2)
+        case _ => pow(x * y, x * x, (n - 1) / 2)
+      }
 
-      if (n == 0) y else g(x, n)
-    }
-
-    n match {
-      case 0 if x == 0 => sys.error(s"pow: zero to the power of zero is undefined")
-      case 0           => 1
-      case _ if n > 0  => f(x, n - 1, x)
-      case _           => sys.error(s"pow: negative exponent: $n")
-    }
+    if (n < 0) sys.error(s"pow: negative exponent: $n") else pow(1, x, n)
   }
 
   def parse(toks: Stream[Token]) = {
