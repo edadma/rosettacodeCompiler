@@ -2,43 +2,48 @@ package xyz.hyperreal.rosettacodeCompiler
 
 import scala.io.Source
 
-object SyntaxAnalyzer {
+object SyntaxAnalyzer extends App {
+
+  fromString("""
+               |    4      1 Keyword_print
+               |    4      6 LeftParen
+               |    4      7 Integer         345
+               |    4     24 RightParen
+               |    4     25 Semicolon
+               |    5      1 End_of_input
+               |""".trim.stripMargin)
+
+  lazy val symbols =
+    Map[String, (PrefixOperator, InfixOperator)](
+      "+" -> (PrefixOperator(30, +_.asInstanceOf[Int]), InfixOperator(10,
+                                                                      LeftAssoc,
+                                                                      _.asInstanceOf[Int] + _.asInstanceOf[Int])),
+      "-" -> (PrefixOperator(30, -_.asInstanceOf[Int]), InfixOperator(10,
+                                                                      LeftAssoc,
+                                                                      _.asInstanceOf[Int] - _.asInstanceOf[Int])),
+      "*" -> (null, InfixOperator(20, LeftAssoc, _.asInstanceOf[Int] * _.asInstanceOf[Int])),
+      "/" -> (null, InfixOperator(20, LeftAssoc, _.asInstanceOf[Int] / _.asInstanceOf[Int])),
+      "^" -> (null, InfixOperator(30, RightAssoc, (a, b) => pow(a.asInstanceOf[Int], b.asInstanceOf[Int]))),
+      "(" -> null,
+      ")" -> null
+    )
 
   def fromStdin = fromSource(Source.stdin)
 
   def fromString(src: String) = fromSource(Source.fromString(src))
 
   def fromSource(s: Source) = {
-    val tokens = s.getLines map (_.trim.split(" +", 4)) map {
-      case Array(line, col, name)        => Token(line.toInt, col.toInt, name, null)
-      case Array(line, col, name, value) => Token(line.toInt, col.toInt, name, value)
-    }
+    val tokens = (s.getLines map (_.trim.split(" +", 4)) map {
+      case Array(line, col, name) =>
+        symbols get name match {
+          case None | Some(null) => SimpleToken(line.toInt, col.toInt, name)
+          case Some(operators)   => OperatorToken(line.toInt, col.toInt, name, operators)
+        }
+      case Array(line, col, name, value) => ValueToken(line.toInt, col.toInt, name, value)
+    }) ++ Iterator(EOI) toStream
 
-    println(tokens.toList mkString "\n")
+    println(tokens mkString "\n")
   }
-
-//  def tokenize(s: String): Stream[Token] =
-//    "[0-9]+|[-+/^*()]".r.findAllMatchIn(s).map(_.matched).map { n =>
-//      if (n.head.isDigit)
-//        ValueToken(n.toInt)
-//      else
-//        symbols get n match {
-//          case None            => sys.error(s"unrecognized token: $n")
-//          case Some(null)      => DelimiterToken(n)
-//          case Some(operators) => OperatorToken(n, operators)
-//        }
-//    } ++ Iterator(EOI) toStream
-
-  val symbols =
-    Map[String, (PrefixOperator, InfixOperator)](
-      "+" -> (PrefixOperator(30, +_), InfixOperator(10, LeftAssoc, _ + _)),
-      "-" -> (PrefixOperator(30, -_), InfixOperator(10, LeftAssoc, _ - _)),
-      "*" -> (null, InfixOperator(20, LeftAssoc, _ * _)),
-      "/" -> (null, InfixOperator(20, LeftAssoc, _ / _)),
-      "^" -> (null, InfixOperator(30, RightAssoc, pow)),
-      "(" -> null,
-      ")" -> null
-    )
 
   def pow(x: Int, n: Int) = {
     def f(x: Int, n: Int, y: Int): Int = {
@@ -77,7 +82,7 @@ object SyntaxAnalyzer {
 
     def isInfix = token.isInstanceOf[OperatorToken] && infixOperator != null
 
-    def parse(minPrec: Int): Int = {
+    def parse(minPrec: Int): Any = {
       var result = primitive
 
       while (isInfix && infixOperator.prec >= minPrec) {
@@ -93,12 +98,12 @@ object SyntaxAnalyzer {
 
     def primitive =
       consume match {
-        case DelimiterToken(_, _, "(") =>
+        case SimpleToken(_, _, "(") =>
           val result = parse(0)
 
           expect(")", "expected closing parenthesis")
           result
-        case ValueToken(_, _, value)                               => value
+        case ValueToken(_, _, "Integer", value)                    => value.toInt
         case OperatorToken(_, _, _, (prefix, _)) if prefix ne null => prefix.compute(parse(prefix.prec))
         case OperatorToken(_, _, _, (_, infix)) if infix ne null =>
           sys.error(s"expected a primitive expression, not an infix operator: $token")
@@ -118,8 +123,8 @@ object SyntaxAnalyzer {
   }
 
   abstract class Token { val line: Int; val col: Int; val name: String }
-  case class DelimiterToken(line: Int, col: Int, name: String)                                            extends Token
-  case class ValueToken(line: Int, col: Int, value: Int)                                                  extends Token { val name = "int" }
+  case class SimpleToken(line: Int, col: Int, name: String)                                               extends Token
+  case class ValueToken(line: Int, col: Int, name: String, value: String)                                 extends Token
   case class OperatorToken(line: Int, col: Int, name: String, operators: (PrefixOperator, InfixOperator)) extends Token
   case class EOI(line: Int, col: Int)                                                                     extends Token { val name = "EOI" }
 
@@ -128,7 +133,7 @@ object SyntaxAnalyzer {
   case object RightAssoc extends Assoc
 
   abstract class Operator
-  case class InfixOperator(prec: Int, assoc: Assoc, compute: (Int, Int) => Int) extends Operator
-  case class PrefixOperator(prec: Int, compute: Int => Int)                     extends Operator
+  case class InfixOperator(prec: Int, assoc: Assoc, compute: (Any, Any) => Any) extends Operator
+  case class PrefixOperator(prec: Int, compute: Any => Any)                     extends Operator
 
 }
