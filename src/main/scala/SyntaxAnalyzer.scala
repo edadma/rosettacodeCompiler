@@ -13,7 +13,7 @@ object SyntaxAnalyzer {
         BranchNode("Subtract", _, _))),
       "Op_multiply" -> (null, InfixOperator(20, LeftAssoc, BranchNode("Multiply", _, _))),
       "Op_divide"   -> (null, InfixOperator(20, LeftAssoc, BranchNode("Divide", _, _))),
-      "Op_mod"      -> (null, InfixOperator(30, RightAssoc, BranchNode("Mod", _, _))),
+      "Op_mod"      -> (null, InfixOperator(20, RightAssoc, BranchNode("Mod", _, _))),
       "LeftParen"   -> null,
       "RightParen"  -> null
     )
@@ -159,7 +159,13 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
         expect("Semicolon")
       } else if (token.name == "Semicolon")
         next
-      else if (accept("Keyword_while"))
+      else if (token.name == "Identifier") {
+        val ident = LeafNode("Identifier", consume.asInstanceOf[ValueToken].value)
+
+        expect("Op_assign")
+        stmt = BranchNode("Assign", ident, expression(0))
+        expect("Semicolon")
+      } else if (accept("Keyword_while"))
         stmt = BranchNode("While", parenExpression, statement)
       else
         sys.error(s"syntax error: $token")
