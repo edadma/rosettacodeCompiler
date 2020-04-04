@@ -134,10 +134,14 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
       e
     }
 
-    def statement = {
+    def statement: Node = {
       tree = TerminalNode
 
-      if (accept("Keyword_putc")) {
+      if (accept("Keyword_if"))
+        tree = BranchNode("If",
+                          parenExpression,
+                          BranchNode("If", statement, if (accept("Keyword_else")) statement else TerminalNode))
+      else if (accept("Keyword_putc")) {
         tree = BranchNode("Prtc", parenExpression)
         expect("Semicolon")
       } else if (accept("Keyword_print")) {
