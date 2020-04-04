@@ -2,29 +2,54 @@ package xyz.hyperreal.rosettacodeCompiler
 
 import scala.io.Source
 
-object SyntaxAnalyzer extends App {
+object SyntaxAnalyzer {
 
-  fromString("""
-               |    4      1 Keyword_print
-               |    4      6 LeftParen
-               |    4      7 String         "Hello, World!\n"
-               |    4     24 RightParen
-               |    4     25 Semicolon
-               |    5      1 End_of_input
-               |""".trim.stripMargin)
+  //  fromString("""
+  //               |    1      1 Keyword_print
+  //               |    1      6 LeftParen
+  //               |    1      7 Integer        3
+  //               |    1      9 Op_add
+  //               |    1     11 Integer        4
+  //               |    1     12 Comma
+  //               |    1     14 String         "asdf\n"
+  //               |    1     22 RightParen
+  //               |    1     23 Semicolon
+  //               |    1     24 End_of_input
+  //               |""".trim.stripMargin)
 
-  lazy val symbols =
+  val symbols =
     Map[String, (PrefixOperator, InfixOperator)](
-      "+" -> (PrefixOperator(30, identity), InfixOperator(10, LeftAssoc, BranchNode("Add", _, _))),
-      "-" -> (PrefixOperator(30, BranchNode("Negate", _, TerminalNode)), InfixOperator(10,
-                                                                                       LeftAssoc,
-                                                                                       BranchNode("Subtract", _, _))),
-      "*" -> (null, InfixOperator(20, LeftAssoc, BranchNode("Multiply", _, _))),
-      "/" -> (null, InfixOperator(20, LeftAssoc, BranchNode("Divide", _, _))),
-      "%" -> (null, InfixOperator(30, RightAssoc, BranchNode("Mod", _, _))),
-      "(" -> null,
-      ")" -> null
+      "Op_add" -> (PrefixOperator(30, identity), InfixOperator(10, LeftAssoc, BranchNode("Add", _, _))),
+      "Op_minus" -> (PrefixOperator(30, BranchNode("Negate", _, TerminalNode)), InfixOperator(
+        10,
+        LeftAssoc,
+        BranchNode("Subtract", _, _))),
+      "Op_multiply" -> (null, InfixOperator(20, LeftAssoc, BranchNode("Multiply", _, _))),
+      "Op_divide"   -> (null, InfixOperator(20, LeftAssoc, BranchNode("Divide", _, _))),
+      "Op_mod"      -> (null, InfixOperator(30, RightAssoc, BranchNode("Mod", _, _))),
+      "LeftParen"   -> null,
+      "RightParen"  -> null
     )
+
+  def apply = new SyntaxAnalyzer(symbols)
+
+  abstract class Node
+  case class LeafNode(name: String, value: String)             extends Node
+  case class BranchNode(name: String, left: Node, right: Node) extends Node
+  case object TerminalNode                                     extends Node
+
+  abstract class Assoc
+  case object LeftAssoc  extends Assoc
+  case object RightAssoc extends Assoc
+
+  abstract class Operator
+  case class InfixOperator(prec: Int, assoc: Assoc, compute: (Node, Node) => Node) extends Operator
+  case class PrefixOperator(prec: Int, compute: Node => Node)                      extends Operator
+
+}
+
+class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, SyntaxAnalyzer.InfixOperator)]) {
+  import SyntaxAnalyzer.{BranchNode, InfixOperator, LeafNode, LeftAssoc, Node, PrefixOperator, TerminalNode}
 
   def fromStdin = fromSource(Source.stdin)
 
@@ -40,8 +65,8 @@ object SyntaxAnalyzer extends App {
       case Array(line, col, name, value) => ValueToken(line.toInt, col.toInt, name, value)
     }) toStream)
 
-    println(tokens mkString "\n")
-    println(parse(tokens))
+    //println(tokens mkString "\n")
+    //println(parse(tokens))
     flatten(parse(tokens))
   }
 
@@ -116,10 +141,15 @@ object SyntaxAnalyzer extends App {
     if (accept("Keyword_print")) {
       expect("LeftParen")
 
-      if (token.name == "String")
-        tree = BranchNode("Prts", LeafNode("String", consume.asInstanceOf[ValueToken].value), TerminalNode)
-      else
-        tree = BranchNode("Prti", expression(0), TerminalNode)
+      do {
+        val e =
+          if (token.name == "String")
+            BranchNode("Prts", LeafNode("String", consume.asInstanceOf[ValueToken].value), TerminalNode)
+          else
+            BranchNode("Prti", expression(0), TerminalNode)
+
+        tree = BranchNode("Sequence", tree, e)
+      } while (accept("Comma"))
 
       expect("RightParen")
       expect("Semicolon")
@@ -130,11 +160,6 @@ object SyntaxAnalyzer extends App {
     tree
   }
 
-  abstract class Node
-  case class LeafNode(name: String, value: String)             extends Node
-  case class BranchNode(name: String, left: Node, right: Node) extends Node
-  case object TerminalNode                                     extends Node
-
   abstract class Token {
     val line: Int;
     val col: Int;
@@ -144,13 +169,5 @@ object SyntaxAnalyzer extends App {
   case class SimpleToken(line: Int, col: Int, name: String)                                               extends Token
   case class ValueToken(line: Int, col: Int, name: String, value: String)                                 extends Token
   case class OperatorToken(line: Int, col: Int, name: String, operators: (PrefixOperator, InfixOperator)) extends Token
-
-  abstract class Assoc
-  case object LeftAssoc  extends Assoc
-  case object RightAssoc extends Assoc
-
-  abstract class Operator
-  case class InfixOperator(prec: Int, assoc: Assoc, compute: (Node, Node) => Node) extends Operator
-  case class PrefixOperator(prec: Int, compute: Node => Node)                      extends Operator
 
 }

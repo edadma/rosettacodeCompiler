@@ -10,6 +10,7 @@ object Main extends App {
 
   case class Options(
       lexer: Boolean = false,
+      parser: Boolean = false,
       input: Option[Path] = None,
       output: Option[Path] = None
   )
@@ -20,6 +21,9 @@ object Main extends App {
     opt[Unit]('l', "lexer")
       .action((_, c) => c.copy(lexer = true))
       .text("run lexer only")
+    opt[Unit]('p', "parser")
+      .action((_, c) => c.copy(parser = true))
+      .text("run parser only")
     version("version").text("print the version").abbr("v")
   }
 
@@ -37,6 +41,8 @@ object Main extends App {
 //      }
       if (options.lexer)
         LexicalAnalyzer.apply.fromStdin
+      else if (options.parser)
+        SyntaxAnalyzer.apply.fromStdin
       else {
         println("full compiler not yet implemented")
         sys.exit(1)

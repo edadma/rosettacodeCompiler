@@ -13,8 +13,7 @@ object LexicalAnalyzer {
       "/"  -> "Op_divide",
       "%"  -> "Op_mod",
       "+"  -> "Op_add",
-      "-"  -> "Op_subtract",
-      "-"  -> "Op_negate",
+      "-"  -> "Op_minus",
       "<"  -> "Op_less",
       "<=" -> "Op_lessequal",
       ">"  -> "Op_greater",
@@ -59,6 +58,12 @@ object LexicalAnalyzer {
 
   def apply =
     new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers, integers, characters, strings)
+
+  abstract class Token
+  case class StartRestToken(name: String, start: Set[Char], rest: Set[Char])                       extends Token
+  case class SimpleToken(name: String, chars: Set[Char], exclude: Set[Char], excludeError: String) extends Token
+  case class DelimitedToken(name: String, delimiter: Char, pattern: Regex, patternError: String, unclosedError: String)
+      extends Token
 }
 
 class LexicalAnalyzer(tabs: Int,
@@ -66,8 +71,8 @@ class LexicalAnalyzer(tabs: Int,
                       delimiters: Map[Char, String],
                       keywords: Map[String, String],
                       endOfInput: String,
-                      identifier: Token,
-                      tokens: Token*) {
+                      identifier: LexicalAnalyzer.Token,
+                      tokens: LexicalAnalyzer.Token*) {
 
   import LexicalAnalyzer._
 
@@ -259,9 +264,3 @@ class LexicalAnalyzer(tabs: Int,
   }
 
 }
-
-abstract class Token
-case class StartRestToken(name: String, start: Set[Char], rest: Set[Char])                       extends Token
-case class SimpleToken(name: String, chars: Set[Char], exclude: Set[Char], excludeError: String) extends Token
-case class DelimitedToken(name: String, delimiter: Char, pattern: Regex, patternError: String, unclosedError: String)
-    extends Token
