@@ -28,6 +28,18 @@ object SyntaxAnalyzer extends App {
       ")" -> null
     )
 
+  private def pow(x: Int, n: Int) = {
+    def pow(y: Int, x: Int, n: Int): Int =
+      n match {
+        case 0 => 1
+        case 1 => x * y
+        case _ if n % 2 == 0 => pow(y, x * x, n / 2)
+        case _ => pow(x * y, x * x, (n - 1) / 2)
+      }
+
+    if (n < 0) sys.error(s"pow: negative exponent: $n") else pow(1, x, n)
+  }
+
   def fromStdin = fromSource(Source.stdin)
 
   def fromString(src: String) = fromSource(Source.fromString(src))
@@ -45,18 +57,6 @@ object SyntaxAnalyzer extends App {
     println(tokens mkString "\n")
   }
 
-  def pow(x: Int, n: Int) = {
-    def pow(y: Int, x: Int, n: Int): Int =
-      n match {
-        case 0 => 1
-        case 1 => x * y
-        case _ if n % 2 == 0 => pow(y, x * x, n / 2)
-        case _ => pow(x * y, x * x, (n - 1) / 2)
-      }
-
-    if (n < 0) sys.error(s"pow: negative exponent: $n") else pow(1, x, n)
-  }
-
   def parse(toks: Stream[Token]) = {
     var cur = toks
 
@@ -71,55 +71,72 @@ object SyntaxAnalyzer extends App {
       res
     }
 
-    def infixOperator = token.asInstanceOf[OperatorToken].operators._2
+    def accept(name: String) =
+      if (token.name == name) {
+        next
+        true
+      } else
+        false
 
-    def isInfix = token.isInstanceOf[OperatorToken] && infixOperator != null
+    def expect(name: String, error: String = null) =
+      if (consume.name != name)
+        sys.error(if (error eq null) s"expected $name" else s"$error: $token")
 
-    def parse(minPrec: Int): Any = {
-      var result = primitive
+    def expression(minPrec: Int): Any = {
+      def infixOperator = token.asInstanceOf[OperatorToken].operators._2
+
+      def isInfix = token.isInstanceOf[OperatorToken] && infixOperator != null
+
+      var result =
+        consume match {
+          case SimpleToken(_, _, "(") =>
+            val result = expression(0)
+
+            expect(")", "expected closing parenthesis")
+            result
+          case ValueToken(_, _, "Integer", value)                    => value.toInt
+          case OperatorToken(_, _, _, (prefix, _)) if prefix ne null => prefix.compute(expression(prefix.prec))
+          case OperatorToken(_, _, _, (_, infix)) if infix ne null =>
+            sys.error(s"expected a primitive expression, not an infix operator: $token")
+        }
 
       while (isInfix && infixOperator.prec >= minPrec) {
         val InfixOperator(prec, assoc, compute) = infixOperator
         val nextMinPrec                         = if (assoc == LeftAssoc) prec + 1 else prec
 
         next
-        result = compute(result, parse(nextMinPrec))
+        result = compute(result, expression(nextMinPrec))
       }
 
       result
     }
 
-    def primitive =
-      consume match {
-        case SimpleToken(_, _, "(") =>
-          val result = parse(0)
+    if (accept("Keyword_print")) {
+      expect("(")
 
-          expect(")", "expected closing parenthesis")
-          result
-        case ValueToken(_, _, "Integer", value)                    => value.toInt
-        case OperatorToken(_, _, _, (prefix, _)) if prefix ne null => prefix.compute(parse(prefix.prec))
-        case OperatorToken(_, _, _, (_, infix)) if infix ne null =>
-          sys.error(s"expected a primitive expression, not an infix operator: $token")
-      }
+      val arg = expression(0)
 
-    def expect(name: String, error: String) = {
-      if (token.name != name)
-        sys.error(s"$error: $token")
-
-      next
-    }
-
-    val result = parse(0)
+      expect(")")
+      expect(";")
+      println("Prti")
+    } else
+      sys.error(s"syntax error: $token")
 
     expect("EOI", "expected end of input")
-    result
   }
 
-  abstract class Token { val line: Int; val col: Int; val name: String }
+  abstract class Token {
+    val line: Int;
+    val col: Int;
+    val name: String
+  }
+
   case class SimpleToken(line: Int, col: Int, name: String)                                               extends Token
   case class ValueToken(line: Int, col: Int, name: String, value: String)                                 extends Token
   case class OperatorToken(line: Int, col: Int, name: String, operators: (PrefixOperator, InfixOperator)) extends Token
-  case class EOI(line: Int, col: Int)                                                                     extends Token { val name = "EOI" }
+  case class EOI(line: Int, col: Int) extends Token {
+    val name = "EOI"
+  }
 
   abstract class Assoc
   case object LeftAssoc  extends Assoc
