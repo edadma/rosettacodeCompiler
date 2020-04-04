@@ -21,9 +21,9 @@ object SyntaxAnalyzer {
   def apply = new SyntaxAnalyzer(symbols)
 
   abstract class Node
-  case class LeafNode(name: String, value: String)             extends Node
-  case class BranchNode(name: String, left: Node, right: Node) extends Node
-  case object TerminalNode                                     extends Node
+  case class LeafNode(name: String, value: String)                            extends Node
+  case class BranchNode(name: String, left: Node, right: Node = TerminalNode) extends Node
+  case object TerminalNode                                                    extends Node
 
   abstract class Assoc
   case object LeftAssoc  extends Assoc
@@ -125,18 +125,30 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
 
     var tree: Node = null
 
+    def parenExpression = {
+      expect("LeftParen")
+
+      val e = expression(0)
+
+      expect("RightParen")
+      e
+    }
+
     def statement = {
       tree = TerminalNode
 
-      if (accept("Keyword_print")) {
+      if (accept("Keyword_putc")) {
+        tree = BranchNode("Prtc", parenExpression)
+        expect("Semicolon")
+      } else if (accept("Keyword_print")) {
         expect("LeftParen")
 
         do {
           val e =
             if (token.name == "String")
-              BranchNode("Prts", LeafNode("String", consume.asInstanceOf[ValueToken].value), TerminalNode)
+              BranchNode("Prts", LeafNode("String", consume.asInstanceOf[ValueToken].value))
             else
-              BranchNode("Prti", expression(0), TerminalNode)
+              BranchNode("Prti", expression(0))
 
           tree = BranchNode("Sequence", tree, e)
         } while (accept("Comma"))
