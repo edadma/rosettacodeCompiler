@@ -4,19 +4,6 @@ import scala.io.Source
 
 object SyntaxAnalyzer {
 
-  //  fromString("""
-  //               |    1      1 Keyword_print
-  //               |    1      6 LeftParen
-  //               |    1      7 Integer        3
-  //               |    1      9 Op_add
-  //               |    1     11 Integer        4
-  //               |    1     12 Comma
-  //               |    1     14 String         "asdf\n"
-  //               |    1     22 RightParen
-  //               |    1     23 Semicolon
-  //               |    1     24 End_of_input
-  //               |""".trim.stripMargin)
-
   val symbols =
     Map[String, (PrefixOperator, InfixOperator)](
       "Op_add" -> (PrefixOperator(30, identity), InfixOperator(10, LeftAssoc, BranchNode("Add", _, _))),

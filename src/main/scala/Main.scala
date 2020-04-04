@@ -15,7 +15,7 @@ object Main extends App {
       output: Option[Path] = None
   )
 
-  private val parser = new scopt.OptionParser[Options]("rosettacodeCompiler") {
+  private val optionsParser = new scopt.OptionParser[Options]("rosettacodeCompiler") {
     head("Rosetta Code Compiler", "v0.1")
     help("help").text("print this usage text").abbr("h")
     opt[Unit]('l', "lexer")
@@ -27,7 +27,7 @@ object Main extends App {
     version("version").text("print the version").abbr("v")
   }
 
-  parser.parse(args, Options()) match {
+  optionsParser.parse(args, Options()) match {
     case Some(options) =>
 //      options match {
 //        case Options(None, None, None, None, None)         => REPL()
@@ -43,10 +43,8 @@ object Main extends App {
         LexicalAnalyzer.apply.fromStdin
       else if (options.parser)
         SyntaxAnalyzer.apply.fromStdin
-      else {
-        println("full compiler not yet implemented")
-        sys.exit(1)
-      }
+      else
+        ASTInterpreter.fromString(capture(SyntaxAnalyzer.apply.fromString(capture(LexicalAnalyzer.apply.fromStdin))))
     case None => sys.exit(1)
   }
 
