@@ -22,7 +22,7 @@ object SyntaxAnalyzer {
 
   abstract class Node
   case class LeafNode(name: String, value: String)             extends Node
-  case class BranchNode(name: String, left: Node, right: Node) extends Node
+  case class BranchNode(name: String, left: Node, right: Node = TerminalNode) extends Node
   case object TerminalNode                                     extends Node
 
   abstract class Assoc
@@ -125,26 +125,39 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
 
     var tree: Node = null
 
+    def parenExpression = {
+      expect("LeftParen")
+
+      val e = expression(0)
+
+      expect("RightParen")
+      e
+    }
+
     def statement = {
       tree = TerminalNode
 
-      if (accept("Keyword_print")) {
-        expect("LeftParen")
-
-        do {
-          val e =
-            if (token.name == "String")
-              BranchNode("Prts", LeafNode("String", consume.asInstanceOf[ValueToken].value), TerminalNode)
-            else
-              BranchNode("Prti", expression(0), TerminalNode)
-
-          tree = BranchNode("Sequence", tree, e)
-        } while (accept("Comma"))
-
-        expect("RightParen")
+      if (accept("Keyword_putc")) {
+        tree = BranchNode("Prtc", parenExpression)
         expect("Semicolon")
-      } else
-        sys.error(s"syntax error: $token")
+      } else     if (accept("Keyword_print")) {
+          expect("LeftParen")
+
+          do {
+            val e =
+              if (token.name == "String")
+                BranchNode("Prts", LeafNode("String", consume.asInstanceOf[ValueToken].value), TerminalNode)
+              else
+                BranchNode("Prti", expression(0), TerminalNode)
+
+            tree = BranchNode("Sequence", tree, e)
+          } while (accept("Comma"))
+
+          expect("RightParen")
+          expect("Semicolon")
+        } else
+          sys.error(s"syntax error: $token")
+      }
 
       tree
     }
