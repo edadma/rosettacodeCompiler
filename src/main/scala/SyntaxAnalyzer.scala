@@ -123,25 +123,37 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
       result
     }
 
-    var tree: Node = TerminalNode
+    var tree: Node = null
 
-    if (accept("Keyword_print")) {
-      expect("LeftParen")
+    def statement = {
+      tree = TerminalNode
 
-      do {
-        val e =
-          if (token.name == "String")
-            BranchNode("Prts", LeafNode("String", consume.asInstanceOf[ValueToken].value), TerminalNode)
-          else
-            BranchNode("Prti", expression(0), TerminalNode)
+      if (accept("Keyword_print")) {
+        expect("LeftParen")
 
-        tree = BranchNode("Sequence", tree, e)
-      } while (accept("Comma"))
+        do {
+          val e =
+            if (token.name == "String")
+              BranchNode("Prts", LeafNode("String", consume.asInstanceOf[ValueToken].value), TerminalNode)
+            else
+              BranchNode("Prti", expression(0), TerminalNode)
 
-      expect("RightParen")
-      expect("Semicolon")
-    } else
-      sys.error(s"syntax error: $token")
+          tree = BranchNode("Sequence", tree, e)
+        } while (accept("Comma"))
+
+        expect("RightParen")
+        expect("Semicolon")
+      } else
+        sys.error(s"syntax error: $token")
+
+      tree
+    }
+
+    tree = TerminalNode
+
+    do {
+      tree = BranchNode("Sequence", tree, statement)
+    } while (token.name != "End_of_input")
 
     expect("End_of_input")
     tree
