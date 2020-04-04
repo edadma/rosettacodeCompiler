@@ -123,8 +123,6 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
       result
     }
 
-    var tree: Node = null
-
     def parenExpression = {
       expect("LeftParen")
 
@@ -135,14 +133,14 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
     }
 
     def statement: Node = {
-      tree = TerminalNode
+      var stmt: Node = TerminalNode
 
       if (accept("Keyword_if"))
-        tree = BranchNode("If",
+        stmt = BranchNode("If",
                           parenExpression,
                           BranchNode("If", statement, if (accept("Keyword_else")) statement else TerminalNode))
       else if (accept("Keyword_putc")) {
-        tree = BranchNode("Prtc", parenExpression)
+        stmt = BranchNode("Prtc", parenExpression)
         expect("Semicolon")
       } else if (accept("Keyword_print")) {
         expect("LeftParen")
@@ -154,18 +152,22 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
             else
               BranchNode("Prti", expression(0))
 
-          tree = BranchNode("Sequence", tree, e)
+          stmt = BranchNode("Sequence", stmt, e)
         } while (accept("Comma"))
 
         expect("RightParen")
         expect("Semicolon")
-      } else
+      } else if (token.name == "Semicolon")
+        next
+      else if (accept("Keyword_while"))
+        stmt = BranchNode("While", parenExpression, statement)
+      else
         sys.error(s"syntax error: $token")
 
-      tree
+      stmt
     }
 
-    tree = TerminalNode
+    var tree: Node = TerminalNode
 
     do {
       tree = BranchNode("Sequence", tree, statement)
