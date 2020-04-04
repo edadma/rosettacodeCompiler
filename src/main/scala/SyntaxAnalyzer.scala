@@ -7,7 +7,7 @@ object SyntaxAnalyzer extends App {
   fromString("""
                |    4      1 Keyword_print
                |    4      6 LeftParen
-               |    4      7 Integer         345
+               |    4      7 String         "Hello, World!\n"
                |    4     24 RightParen
                |    4     25 Semicolon
                |    5      1 End_of_input
@@ -15,47 +15,45 @@ object SyntaxAnalyzer extends App {
 
   lazy val symbols =
     Map[String, (PrefixOperator, InfixOperator)](
-      "+" -> (PrefixOperator(30, +_.asInstanceOf[Int]), InfixOperator(10,
-                                                                      LeftAssoc,
-                                                                      _.asInstanceOf[Int] + _.asInstanceOf[Int])),
-      "-" -> (PrefixOperator(30, -_.asInstanceOf[Int]), InfixOperator(10,
-                                                                      LeftAssoc,
-                                                                      _.asInstanceOf[Int] - _.asInstanceOf[Int])),
-      "*" -> (null, InfixOperator(20, LeftAssoc, _.asInstanceOf[Int] * _.asInstanceOf[Int])),
-      "/" -> (null, InfixOperator(20, LeftAssoc, _.asInstanceOf[Int] / _.asInstanceOf[Int])),
-      "^" -> (null, InfixOperator(30, RightAssoc, (a, b) => pow(a.asInstanceOf[Int], b.asInstanceOf[Int]))),
+      "+" -> (PrefixOperator(30, identity), InfixOperator(10, LeftAssoc, BranchNode("Add", _, _))),
+      "-" -> (PrefixOperator(30, BranchNode("Negate", _, TerminalNode)), InfixOperator(10,
+                                                                                       LeftAssoc,
+                                                                                       BranchNode("Subtract", _, _))),
+      "*" -> (null, InfixOperator(20, LeftAssoc, BranchNode("Multiply", _, _))),
+      "/" -> (null, InfixOperator(20, LeftAssoc, BranchNode("Divide", _, _))),
+      "%" -> (null, InfixOperator(30, RightAssoc, BranchNode("Mod", _, _))),
       "(" -> null,
       ")" -> null
     )
-
-  private def pow(x: Int, n: Int) = {
-    def pow(y: Int, x: Int, n: Int): Int =
-      n match {
-        case 0 => 1
-        case 1 => x * y
-        case _ if n % 2 == 0 => pow(y, x * x, n / 2)
-        case _ => pow(x * y, x * x, (n - 1) / 2)
-      }
-
-    if (n < 0) sys.error(s"pow: negative exponent: $n") else pow(1, x, n)
-  }
 
   def fromStdin = fromSource(Source.stdin)
 
   def fromString(src: String) = fromSource(Source.fromString(src))
 
   def fromSource(s: Source) = {
-    val tokens = (s.getLines map (_.trim.split(" +", 4)) map {
+    val tokens = ((s.getLines map (_.trim.split(" +", 4)) map {
       case Array(line, col, name) =>
         symbols get name match {
           case None | Some(null) => SimpleToken(line.toInt, col.toInt, name)
           case Some(operators)   => OperatorToken(line.toInt, col.toInt, name, operators)
         }
       case Array(line, col, name, value) => ValueToken(line.toInt, col.toInt, name, value)
-    }) ++ Iterator(EOI) toStream
+    }) toStream)
 
     println(tokens mkString "\n")
+    println(parse(tokens))
+    flatten(parse(tokens))
   }
+
+  def flatten(n: Node): Unit =
+    n match {
+      case TerminalNode          => println(";")
+      case LeafNode(name, value) => println(s"$name $value")
+      case BranchNode(name, left, right) =>
+        println(name)
+        flatten(left)
+        flatten(right)
+    }
 
   def parse(toks: Stream[Token]) = {
     var cur = toks
@@ -79,10 +77,12 @@ object SyntaxAnalyzer extends App {
         false
 
     def expect(name: String, error: String = null) =
-      if (consume.name != name)
-        sys.error(if (error eq null) s"expected $name" else s"$error: $token")
+      if (token.name != name)
+        sys.error(if (error eq null) s"expected $name, found ${token.name}" else s"$error: $token")
+      else
+        next
 
-    def expression(minPrec: Int): Any = {
+    def expression(minPrec: Int): Node = {
       def infixOperator = token.asInstanceOf[OperatorToken].operators._2
 
       def isInfix = token.isInstanceOf[OperatorToken] && infixOperator != null
@@ -94,7 +94,7 @@ object SyntaxAnalyzer extends App {
 
             expect(")", "expected closing parenthesis")
             result
-          case ValueToken(_, _, "Integer", value)                    => value.toInt
+          case ValueToken(_, _, name, value)                         => LeafNode(name, value)
           case OperatorToken(_, _, _, (prefix, _)) if prefix ne null => prefix.compute(expression(prefix.prec))
           case OperatorToken(_, _, _, (_, infix)) if infix ne null =>
             sys.error(s"expected a primitive expression, not an infix operator: $token")
@@ -111,19 +111,29 @@ object SyntaxAnalyzer extends App {
       result
     }
 
+    var tree: Node = TerminalNode
+
     if (accept("Keyword_print")) {
-      expect("(")
+      expect("LeftParen")
 
-      val arg = expression(0)
+      if (token.name == "String")
+        tree = BranchNode("Prts", LeafNode("String", consume.asInstanceOf[ValueToken].value), TerminalNode)
+      else
+        tree = BranchNode("Prti", expression(0), TerminalNode)
 
-      expect(")")
-      expect(";")
-      println("Prti")
+      expect("RightParen")
+      expect("Semicolon")
     } else
       sys.error(s"syntax error: $token")
 
-    expect("EOI", "expected end of input")
+    expect("End_of_input")
+    tree
   }
+
+  abstract class Node
+  case class LeafNode(name: String, value: String)             extends Node
+  case class BranchNode(name: String, left: Node, right: Node) extends Node
+  case object TerminalNode                                     extends Node
 
   abstract class Token {
     val line: Int;
@@ -134,16 +144,13 @@ object SyntaxAnalyzer extends App {
   case class SimpleToken(line: Int, col: Int, name: String)                                               extends Token
   case class ValueToken(line: Int, col: Int, name: String, value: String)                                 extends Token
   case class OperatorToken(line: Int, col: Int, name: String, operators: (PrefixOperator, InfixOperator)) extends Token
-  case class EOI(line: Int, col: Int) extends Token {
-    val name = "EOI"
-  }
 
   abstract class Assoc
   case object LeftAssoc  extends Assoc
   case object RightAssoc extends Assoc
 
   abstract class Operator
-  case class InfixOperator(prec: Int, assoc: Assoc, compute: (Any, Any) => Any) extends Operator
-  case class PrefixOperator(prec: Int, compute: Any => Any)                     extends Operator
+  case class InfixOperator(prec: Int, assoc: Assoc, compute: (Node, Node) => Node) extends Operator
+  case class PrefixOperator(prec: Int, compute: Node => Node)                      extends Operator
 
 }
