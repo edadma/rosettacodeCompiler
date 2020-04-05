@@ -6,14 +6,18 @@ object SyntaxAnalyzer {
 
   val symbols =
     Map[String, (PrefixOperator, InfixOperator)](
-      "Op_add" -> (PrefixOperator(30, identity), InfixOperator(10, LeftAssoc, BranchNode("Add", _, _))),
+      "Op_or"       -> (null, InfixOperator(10, LeftAssoc, BranchNode("Or", _, _))),
+      "Op_and"      -> (null, InfixOperator(20, LeftAssoc, BranchNode("And", _, _))),
+      "Op_equal"    -> (null, InfixOperator(30, LeftAssoc, BranchNode("Equal", _, _))),
+      "Op_notequal" -> (null, InfixOperator(30, LeftAssoc, BranchNode("NotEqual", _, _))),
+      "Op_add"      -> (PrefixOperator(30, identity), InfixOperator(50, LeftAssoc, BranchNode("Add", _, _))),
       "Op_minus" -> (PrefixOperator(30, BranchNode("Negate", _, TerminalNode)), InfixOperator(
-        10,
+        50,
         LeftAssoc,
         BranchNode("Subtract", _, _))),
-      "Op_multiply" -> (null, InfixOperator(20, LeftAssoc, BranchNode("Multiply", _, _))),
-      "Op_divide"   -> (null, InfixOperator(20, LeftAssoc, BranchNode("Divide", _, _))),
-      "Op_mod"      -> (null, InfixOperator(20, RightAssoc, BranchNode("Mod", _, _))),
+      "Op_multiply" -> (null, InfixOperator(60, LeftAssoc, BranchNode("Multiply", _, _))),
+      "Op_divide"   -> (null, InfixOperator(60, LeftAssoc, BranchNode("Divide", _, _))),
+      "Op_mod"      -> (null, InfixOperator(60, RightAssoc, BranchNode("Mod", _, _))),
       "LeftParen"   -> null,
       "RightParen"  -> null
     )
@@ -167,7 +171,13 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
         expect("Semicolon")
       } else if (accept("Keyword_while"))
         stmt = BranchNode("While", parenExpression, statement)
-      else
+      else if (accept("LeftBrace")) {
+        while (token.name != "RightBrace" && token.name != "End_of_input") {
+          stmt = BranchNode("Sequence", stmt, statement)
+        }
+
+        expect("RightBrace")
+      } else
         sys.error(s"syntax error: $token")
 
       stmt
