@@ -6,18 +6,23 @@ object SyntaxAnalyzer {
 
   val symbols =
     Map[String, (PrefixOperator, InfixOperator)](
-      "Op_or"       -> (null, InfixOperator(10, LeftAssoc, BranchNode("Or", _, _))),
-      "Op_and"      -> (null, InfixOperator(20, LeftAssoc, BranchNode("And", _, _))),
-      "Op_equal"    -> (null, InfixOperator(30, LeftAssoc, BranchNode("Equal", _, _))),
-      "Op_notequal" -> (null, InfixOperator(30, LeftAssoc, BranchNode("NotEqual", _, _))),
-      "Op_add"      -> (PrefixOperator(30, identity), InfixOperator(50, LeftAssoc, BranchNode("Add", _, _))),
-      "Op_minus" -> (PrefixOperator(30, BranchNode("Negate", _, TerminalNode)), InfixOperator(
+      "Op_or"           -> (null, InfixOperator(10, LeftAssoc, BranchNode("Or", _, _))),
+      "Op_and"          -> (null, InfixOperator(20, LeftAssoc, BranchNode("And", _, _))),
+      "Op_equal"        -> (null, InfixOperator(30, LeftAssoc, BranchNode("Equal", _, _))),
+      "Op_notequal"     -> (null, InfixOperator(30, LeftAssoc, BranchNode("NotEqual", _, _))),
+      "Op_less"         -> (null, InfixOperator(40, LeftAssoc, BranchNode("Less", _, _))),
+      "Op_lessequal"    -> (null, InfixOperator(40, LeftAssoc, BranchNode("LessEqual", _, _))),
+      "Op_greater"      -> (null, InfixOperator(40, LeftAssoc, BranchNode("Greater", _, _))),
+      "Op_greaterequal" -> (null, InfixOperator(40, LeftAssoc, BranchNode("GreaterEqual", _, _))),
+      "Op_add"          -> (PrefixOperator(30, identity), InfixOperator(50, LeftAssoc, BranchNode("Add", _, _))),
+      "Op_minus" -> (PrefixOperator(70, BranchNode("Negate", _, TerminalNode)), InfixOperator(
         50,
         LeftAssoc,
         BranchNode("Subtract", _, _))),
       "Op_multiply" -> (null, InfixOperator(60, LeftAssoc, BranchNode("Multiply", _, _))),
       "Op_divide"   -> (null, InfixOperator(60, LeftAssoc, BranchNode("Divide", _, _))),
       "Op_mod"      -> (null, InfixOperator(60, RightAssoc, BranchNode("Mod", _, _))),
+      "Op_not"      -> (PrefixOperator(70, BranchNode("Not", _)), null),
       "LeftParen"   -> null,
       "RightParen"  -> null
     )
