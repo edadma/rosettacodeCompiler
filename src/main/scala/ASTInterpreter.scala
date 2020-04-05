@@ -43,7 +43,7 @@ object ASTInterpreter {
         case LeafNode("Integer", value: String) if value startsWith "'" => value(1).toInt
         case LeafNode("Integer", value: String)                         => value.toInt
         case LeafNode("String", value: String) =>
-          value.substring(1, value.length - 1).replace("\\n", "\n").replace("\\\\", "\\")
+          value.substring(1, value.length - 1).replace("\\\\", "\\").replace("\\n", "\n")
         case BranchNode("Assign", LeafNode(_, name), exp)      => vars(name) = interp(exp)
         case BranchNode("Sequence", l, r)                      => interp(l); interp(r)
         case BranchNode("Prts" | "Prti", a, _)                 => print(interp(a))

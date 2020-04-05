@@ -2,14 +2,14 @@ package xyz.hyperreal.rosettacodeCompiler
 
 import utest._
 
-object SamplePrograms extends TestSuite {
+object SampleProgramInterpreterTests extends TestSuite {
 
   import Testing._
 
   val tests = Tests {
     test("hello world") {
       assert(
-        run(
+        runUsingInterpreter(
           """
             |/*
             |  Hello world
@@ -22,6 +22,64 @@ object SamplePrograms extends TestSuite {
             |""".trim.stripMargin
       )
     }
+
+    test("phoenix number") {
+      assert(
+        runUsingInterpreter(
+          """
+            |/*
+            |  Show Ident and Integers
+            | */
+            |phoenix_number = 142857;
+            |print(phoenix_number, "\n");
+            |""".stripMargin
+        ) ==
+          """
+            |142857
+            |""".trim.stripMargin
+      )
+    }
+
+    test("test case 4") {
+      assert(
+        runUsingInterpreter(
+          """
+            |/*** test printing, embedded \n and comments with lots of '*' ***/
+            |print(42);
+            |print("\nHello World\nGood Bye\nok\n");
+            |print("Print a slash n - \\n.\n");
+            |""".stripMargin
+        ) ==
+          """
+            |42
+            |Hello World
+            |Good Bye
+            |ok
+            |Print a slash n - \n.
+            |""".trim.stripMargin
+      )
+    }
+
+    test("test case 4") {
+      assert(
+        runUsingInterpreter(
+          """
+            |/*** test printing, embedded \n and comments with lots of '*' ***/
+            |print(42);
+            |print("\nHello World\nGood Bye\nok\n");
+            |print("Print a slash n - \\n.\n");
+            |""".stripMargin
+        ) ==
+          """
+            |42
+            |Hello World
+            |Good Bye
+            |ok
+            |Print a slash n - \n.
+            |""".trim.stripMargin
+      )
+    }
+
 //    test("primes") {
 //      assert(
 //        run("""
