@@ -51,10 +51,9 @@ object VirtualMachine {
             for (_ <- 1 to stringsize.toInt)
               yield
                 in.readLine match {
-                  case STRING_REGEX(s) =>
-                    s.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t").replace("\\\\", "\\")
-                  case null => sys.error("expected string constant but encountered end of input")
-                  case s    => sys.error(s"expected string constant: $s")
+                  case STRING_REGEX(s) => unescape(s)
+                  case null            => sys.error("expected string constant but encountered end of input")
+                  case s               => sys.error(s"expected string constant: $s")
                 }
           var line: String = null
           val code         = new ArrayBuffer[Byte]
