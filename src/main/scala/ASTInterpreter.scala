@@ -5,6 +5,19 @@ import scala.io.Source
 
 object ASTInterpreter {
 
+  val escapes = "\\\\b|\\\\f|\\\\t|\\\\r|\\\\n|\\\\\\\\|\\\\\"" r
+
+  def escape(s: String) =
+    escapes.replaceAllIn(s, _.matched match {
+      case "\\b"  => "\b"
+      case "\\f"  => "\f"
+      case "\\t"  => "\t"
+      case "\\r"  => "\r"
+      case "\\n"  => "\n"
+      case "\\\\" => "\\"
+      case "\\\"" => "\""
+    })
+
   def fromStdin = fromSource(Source.stdin)
 
   def fromString(src: String) = fromSource(Source.fromString(src))
@@ -42,29 +55,28 @@ object ASTInterpreter {
         case LeafNode("Integer", "'\\\\'")                              => '\\'.toInt
         case LeafNode("Integer", value: String) if value startsWith "'" => value(1).toInt
         case LeafNode("Integer", value: String)                         => value.toInt
-        case LeafNode("String", value: String) =>
-          value.substring(1, value.length - 1).replace("\\\\", "\\").replace("\\n", "\n")
-        case BranchNode("Assign", LeafNode(_, name), exp)      => vars(name) = interp(exp)
-        case BranchNode("Sequence", l, r)                      => interp(l); interp(r)
-        case BranchNode("Prts" | "Prti", a, _)                 => print(interp(a))
-        case BranchNode("Prtc", a, _)                          => print(interpInt(a).toChar)
-        case BranchNode("Add", l, r)                           => interpInt(l) + interpInt(r)
-        case BranchNode("Subtract", l, r)                      => interpInt(l) - interpInt(r)
-        case BranchNode("Multiply", l, r)                      => interpInt(l) * interpInt(r)
-        case BranchNode("Divide", l, r)                        => interpInt(l) / interpInt(r)
-        case BranchNode("Mod", l, r)                           => interpInt(l) % interpInt(r)
-        case BranchNode("Negate", a, _)                        => -interpInt(a)
-        case BranchNode("Less", l, r)                          => interpInt(l) < interpInt(r)
-        case BranchNode("LessEqual", l, r)                     => interpInt(l) <= interpInt(r)
-        case BranchNode("Greater", l, r)                       => interpInt(l) > interpInt(r)
-        case BranchNode("GreaterEqual", l, r)                  => interpInt(l) >= interpInt(r)
-        case BranchNode("Equal", l, r)                         => interpInt(l) == interpInt(r)
-        case BranchNode("NotEqual", l, r)                      => interpInt(l) != interpInt(r)
-        case BranchNode("And", l, r)                           => interpBoolean(l) && interpBoolean(r)
-        case BranchNode("Or", l, r)                            => interpBoolean(l) || interpBoolean(r)
-        case BranchNode("Not", a, _)                           => !interpBoolean(a)
-        case BranchNode("While", l, r)                         => while (interpBoolean(l)) interp(r)
-        case BranchNode("If", cond, BranchNode("If", yes, no)) => if (interpBoolean(cond)) interp(yes) else interp(no)
+        case LeafNode("String", value: String)                          => escape(value.substring(1, value.length - 1))
+        case BranchNode("Assign", LeafNode(_, name), exp)               => vars(name) = interp(exp)
+        case BranchNode("Sequence", l, r)                               => interp(l); interp(r)
+        case BranchNode("Prts" | "Prti", a, _)                          => print(interp(a))
+        case BranchNode("Prtc", a, _)                                   => print(interpInt(a).toChar)
+        case BranchNode("Add", l, r)                                    => interpInt(l) + interpInt(r)
+        case BranchNode("Subtract", l, r)                               => interpInt(l) - interpInt(r)
+        case BranchNode("Multiply", l, r)                               => interpInt(l) * interpInt(r)
+        case BranchNode("Divide", l, r)                                 => interpInt(l) / interpInt(r)
+        case BranchNode("Mod", l, r)                                    => interpInt(l) % interpInt(r)
+        case BranchNode("Negate", a, _)                                 => -interpInt(a)
+        case BranchNode("Less", l, r)                                   => interpInt(l) < interpInt(r)
+        case BranchNode("LessEqual", l, r)                              => interpInt(l) <= interpInt(r)
+        case BranchNode("Greater", l, r)                                => interpInt(l) > interpInt(r)
+        case BranchNode("GreaterEqual", l, r)                           => interpInt(l) >= interpInt(r)
+        case BranchNode("Equal", l, r)                                  => interpInt(l) == interpInt(r)
+        case BranchNode("NotEqual", l, r)                               => interpInt(l) != interpInt(r)
+        case BranchNode("And", l, r)                                    => interpBoolean(l) && interpBoolean(r)
+        case BranchNode("Or", l, r)                                     => interpBoolean(l) || interpBoolean(r)
+        case BranchNode("Not", a, _)                                    => !interpBoolean(a)
+        case BranchNode("While", l, r)                                  => while (interpBoolean(l)) interp(r)
+        case BranchNode("If", cond, BranchNode("If", yes, no))          => if (interpBoolean(cond)) interp(yes) else interp(no)
       }
 
     interp(load)
