@@ -46,10 +46,14 @@ object LexicalAnalyzer {
   val integers     = SimpleToken("Integer", numeric, alpha, "alpha characters may not follow right after a number")
 
   val characters =
-    DelimitedToken("Integer", '\'', "[^'\n]|\\n|\\\\" r, "invalid character literal", "unclosed character literal")
+    DelimitedToken("Integer",
+                   '\'',
+                   "[^'\\n]|\\\\n|\\\\\\\\" r,
+                   "invalid character literal",
+                   "unclosed character literal")
 
   val strings =
-    DelimitedToken("String", '"', "[^\"\n]*" r, "invalid string literal", "unclosed string literal")
+    DelimitedToken("String", '"', "[^\"\\n]*" r, "invalid string literal", "unclosed string literal")
 
   def apply =
     new LexicalAnalyzer(4, symbols, keywords, "End_of_input", identifiers, integers, characters, strings)
