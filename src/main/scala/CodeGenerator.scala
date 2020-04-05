@@ -136,7 +136,7 @@ object CodeGenerator {
               case "Subtract"     => "sub"
               case "Multiply"     => "mul"
               case "Divide"       => "div"
-              case "Mod"          => "div"
+              case "Mod"          => "mod"
               case "Less"         => "lt"
               case "LessEqual"    => "le"
               case "Greater"      => "gt"

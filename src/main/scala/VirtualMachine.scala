@@ -11,7 +11,7 @@ object VirtualMachine {
 
   private val HEADER_REGEX = "Datasize: ([0-9]+) Strings: ([0-9]+)" r
   private val STRING_REGEX = "\"([^\"]*)\"" r
-  private val PUSH_REGEX   = " *[0-9]+ push +([0-9]+)" r
+  private val PUSH_REGEX   = " *[0-9]+ push +([0-9]+|'(?:[^'\\n]|\\\\n|\\\\\\\\)')" r
   private val PRTS_REGEX   = " *[0-9]+ prts" r
   private val PRTI_REGEX   = " *[0-9]+ prti" r
   private val PRTC_REGEX   = " *[0-9]+ prtc" r
@@ -64,15 +64,17 @@ object VirtualMachine {
             code += a.toByte
           }
 
-          def addInst(opcode: Byte, operand: String) = {
-            val opint = operand.toInt
-
+          def addInstIntOperand(opcode: Byte, operand: Int) = {
             code += opcode
-            addShort(opint >> 16)
-            addShort(opint)
+            addShort(operand >> 16)
+            addShort(operand)
           }
 
+          def addInst(opcode: Byte, operand: String) = addInstIntOperand(opcode, operand.toInt)
+
           while ({ line = in.readLine; line ne null }) line match {
+            case PUSH_REGEX(n) if n startsWith "'" =>
+              addInstIntOperand(PUSH, unescape(n.substring(1, n.length - 1)).head)
             case PUSH_REGEX(n)    => addInst(PUSH, n)
             case PRTS_REGEX()     => code += PRTS
             case PRTI_REGEX()     => code += PRTI

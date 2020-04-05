@@ -5,19 +5,6 @@ import scala.io.Source
 
 object ASTInterpreter {
 
-  val escapes = "\\\\b|\\\\f|\\\\t|\\\\r|\\\\n|\\\\\\\\|\\\\\"" r
-
-  def escape(s: String) =
-    escapes.replaceAllIn(s, _.matched match {
-      case "\\b"  => "\b"
-      case "\\f"  => "\f"
-      case "\\t"  => "\t"
-      case "\\r"  => "\r"
-      case "\\n"  => "\n"
-      case "\\\\" => "\\"
-      case "\\\"" => "\""
-    })
-
   def fromStdin = fromSource(Source.stdin)
 
   def fromString(src: String) = fromSource(Source.fromString(src))
@@ -55,7 +42,7 @@ object ASTInterpreter {
         case LeafNode("Integer", "'\\\\'")                              => '\\'.toInt
         case LeafNode("Integer", value: String) if value startsWith "'" => value(1).toInt
         case LeafNode("Integer", value: String)                         => value.toInt
-        case LeafNode("String", value: String)                          => escape(value.substring(1, value.length - 1))
+        case LeafNode("String", value: String)                          => unescape(value.substring(1, value.length - 1))
         case BranchNode("Assign", LeafNode(_, name), exp)               => vars(name) = interp(exp)
         case BranchNode("Sequence", l, r)                               => interp(l); interp(r)
         case BranchNode("Prts" | "Prti", a, _)                          => print(interp(a))
