@@ -61,8 +61,6 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
       case Array(line, col, name, value) => ValueToken(line.toInt, col.toInt, name, value)
     }) toStream)
 
-    //println(tokens mkString "\n")
-    //println(parse(tokens))
     flatten(parse(tokens))
   }
 

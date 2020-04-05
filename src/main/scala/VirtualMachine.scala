@@ -5,9 +5,9 @@ import java.io.{BufferedReader, FileReader, Reader, StringReader}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-import Opcodes._
-
 object VirtualMachine {
+
+  import Opcodes._
 
   private val HEADER_REGEX = "Datasize: ([0-9]+) Strings: ([0-9]+)" r
   private val STRING_REGEX = "\"([^\"]*)\"" r
@@ -111,6 +111,8 @@ object VirtualMachine {
 
 class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[String]) {
 
+  import Opcodes._
+
   var pc      = 0
   val stack   = new mutable.ArrayStack[Int]
   val data    = new Array[Int](datasize)
@@ -145,10 +147,8 @@ class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[
 
   def connective(c: (Boolean, Boolean) => Boolean) = pushBoolean(c(popBoolean, popBoolean))
 
-  def execute: Unit = {
-    val opcode = getByte
-
-    opcode match {
+  def execute: Unit =
+    getByte match {
       case FETCH => stack push data(getInt)
       case STORE => data(getInt) = stack.pop
       case PUSH  => stack push getInt
@@ -174,7 +174,6 @@ class VirtualMachine(code: IndexedSeq[Byte], datasize: Int, strings: IndexedSeq[
       case PRTS  => print(strings(stack.pop))
       case HALT  => running = false
     }
-  }
 
   def run = {
     pc = 0

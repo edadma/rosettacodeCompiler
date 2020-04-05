@@ -87,12 +87,9 @@ object CodeGenerator {
 
           generate
           addOperand("store", s"[$idx]")
-        case Array("Identifier", name: String) =>
-          addOperand("fetch", s"[${variableIndex(name)}]")
-        case Array("Integer", n: String) =>
-          addOperand("push", s"$n")
-        case Array("String", s: String) =>
-          addOperand("push", s"${stringIndex(s)}")
+        case Array("Identifier", name: String) => addOperand("fetch", s"[${variableIndex(name)}]")
+        case Array("Integer", n: String)       => addOperand("push", s"$n")
+        case Array("String", s: String)        => addOperand("push", s"${stringIndex(s)}")
         case "If" =>
           generate
 
