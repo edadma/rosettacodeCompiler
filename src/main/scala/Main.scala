@@ -1,7 +1,5 @@
 package xyz.hyperreal.rosettacodeCompiler
 
-import java.nio.file.Path
-
 object Main extends App {
 
   case class Options(
@@ -9,9 +7,7 @@ object Main extends App {
       parser: Boolean = false,
       run: Boolean = false,
       gen: Boolean = false,
-      source: Boolean = false,
-      input: Option[Path] = None,
-      output: Option[Path] = None
+      source: Boolean = false
   )
 
   private val optionsParser = new scopt.OptionParser[Options]("rosettacodeCompiler") {
