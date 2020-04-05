@@ -1,10 +1,6 @@
 package xyz.hyperreal.rosettacodeCompiler
 
-import java.io.ByteArrayOutputStream
 import java.nio.file.Path
-
-import scala.collection.mutable
-import scala.io.Source
 
 object Main extends App {
 
@@ -591,12 +587,5 @@ object Main extends App {
 //  println(code)
 //  VirtualMachine.fromString(code).run
 //  ASTInterpreter.fromString(ast)
-
-  def capture(thunk: => Unit) = {
-    val buf = new ByteArrayOutputStream
-
-    Console.withOut(buf)(thunk)
-    buf.toString
-  }
 
 }

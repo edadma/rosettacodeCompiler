@@ -2,14 +2,29 @@ package xyz.hyperreal.rosettacodeCompiler
 
 import utest._
 
-//object SamplePrograms extends TestSuite {
-//
-//  import Testing._
-//
-//  val tests = Tests {
+object SamplePrograms extends TestSuite {
+
+  import Testing._
+
+  val tests = Tests {
+    test("hello world") {
+      assert(
+        run(
+          """
+            |/*
+            |  Hello world
+            | */
+            |print("Hello, World!\n");
+            |""".stripMargin
+        ) ==
+          """
+            |Hello, World!
+            |""".trim.stripMargin
+      )
+    }
 //    test("primes") {
 //      assert(
-//        capture(LexicalAnalyzer.apply.fromString("""
+//        run("""
 //                                                   |/*
 //                                                   | Simple prime number generator
 //                                                   | */
@@ -60,5 +75,5 @@ import utest._
 //            |Total primes found: 26
 //            |""".trim.stripMargin)
 //    }
-//  }
-//}
+  }
+}

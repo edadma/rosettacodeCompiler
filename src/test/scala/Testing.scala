@@ -1,14 +1,10 @@
 package xyz.hyperreal.rosettacodeCompiler
 
-import java.io.ByteArrayOutputStream
-
 object Testing {
 
-  def capture(thunk: => Unit) = {
-    val buf = new ByteArrayOutputStream
-
-    Console.withOut(buf)(thunk)
-    buf.toString
-  }
+  def run(src: String) =
+    capture(
+      ASTInterpreter.fromString(
+        capture(SyntaxAnalyzer.apply.fromString(capture(LexicalAnalyzer.apply.fromString(src))))))
 
 }
