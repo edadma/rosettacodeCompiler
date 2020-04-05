@@ -108,10 +108,10 @@ class SyntaxAnalyzer(symbols: Map[String, (SyntaxAnalyzer.PrefixOperator, Syntax
 
       var result =
         consume match {
-          case SimpleToken(_, _, "(") =>
+          case SimpleToken(_, _, "LeftParen") =>
             val result = expression(0)
 
-            expect(")", "expected closing parenthesis")
+            expect("RightParen", "expected closing parenthesis")
             result
           case ValueToken(_, _, name, value)                         => LeafNode(name, value)
           case OperatorToken(_, _, _, (prefix, _)) if prefix ne null => prefix.compute(expression(prefix.prec))

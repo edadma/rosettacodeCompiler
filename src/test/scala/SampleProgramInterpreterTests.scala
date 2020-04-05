@@ -60,25 +60,96 @@ object SampleProgramInterpreterTests extends TestSuite {
       )
     }
 
-//    test("test case 4") {
-//      assert(
-//        runUsingInterpreter(
-//          """
-//            |/*** test printing, embedded \n and comments with lots of '*' ***/
-//            |print(42);
-//            |print("\nHello World\nGood Bye\nok\n");
-//            |print("Print a slash n - \\n.\n");
-//            |""".stripMargin
-//        ) ==
-//          """
-//            |42
-//            |Hello World
-//            |Good Bye
-//            |ok
-//            |Print a slash n - \n.
-//            |""".trim.stripMargin
-//      )
-//    }
+    test("count") {
+      assert(
+        runUsingInterpreter(
+          """
+            |count = 1;
+            |while (count < 10) {
+            |    print("count is: ", count, "\n");
+            |    count = count + 1;
+            |}
+            |""".stripMargin
+        ) ==
+          """
+            |count is: 1
+            |count is: 2
+            |count is: 3
+            |count is: 4
+            |count is: 5
+            |count is: 6
+            |count is: 7
+            |count is: 8
+            |count is: 9
+            |""".trim.stripMargin
+      )
+    }
+
+    test("100 doors") {
+      assert(
+        runUsingInterpreter(
+          """
+            |/* 100 Doors */
+            |i = 1;
+            |while (i * i <= 100) {
+            |    print("door ", i * i, " is open\n");
+            |    i = i + 1;
+            |}
+            |""".stripMargin
+        ) ==
+          """
+            |door 1 is open
+            |door 4 is open
+            |door 9 is open
+            |door 16 is open
+            |door 25 is open
+            |door 36 is open
+            |door 49 is open
+            |door 64 is open
+            |door 81 is open
+            |door 100 is open
+            |""".trim.stripMargin
+      )
+    }
+
+    test("negative tests") {
+      assert(
+        runUsingInterpreter(
+          """
+            |a = (-1 * ((-1 * (5 * 15)) / 10));
+            |print(a, "\n");
+            |b = -a;
+            |print(b, "\n");
+            |print(-b, "\n");
+            |print(-(1), "\n");
+            |""".stripMargin
+        ) ==
+          """
+            |7
+            |-7
+            |7
+            |-1
+            |""".trim.stripMargin
+      )
+    }
+
+    test("deep") {
+      assert(
+        runUsingInterpreter(
+          """
+            |print(---------------------------------+++5, "\n");
+            |print(((((((((3 + 2) * ((((((2))))))))))))), "\n");
+            |
+            |if (1) { if (1) { if (1) { if (1) { if (1) { print(15, "\n"); } } } } }
+            |""".stripMargin
+        ) ==
+          """
+            |-5
+            |10
+            |15
+            |""".trim.stripMargin
+      )
+    }
 
 //    test("primes") {
 //      assert(

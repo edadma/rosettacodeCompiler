@@ -4,8 +4,7 @@ import scala.io.Source
 import scala.util.matching.Regex
 
 object LexicalAnalyzer {
-  private val SYMBOL = ('!' to '/' toSet) ++ (':' to '@') ++ ('[' to '`') ++ ('{' to '~')
-  private val EOT    = '\u0004'
+  private val EOT = '\u0004'
 
   val symbols =
     Map(
@@ -23,17 +22,13 @@ object LexicalAnalyzer {
       "!"  -> "Op_not",
       "="  -> "Op_assign",
       "&&" -> "Op_and",
-      "¦¦" -> "Op_or"
-    )
-
-  val delimiters =
-    Map(
-      '(' -> "LeftParen",
-      ')' -> "RightParen",
-      '{' -> "LeftBrace",
-      '}' -> "RightBrace",
-      ';' -> "Semicolon",
-      ',' -> "Comma"
+      "¦¦" -> "Op_or",
+      "("  -> "LeftParen",
+      ")"  -> "RightParen",
+      "{"  -> "LeftBrace",
+      "}"  -> "RightBrace",
+      ";"  -> "Semicolon",
+      ","  -> "Comma"
     )
 
   val keywords =
@@ -57,7 +52,7 @@ object LexicalAnalyzer {
     DelimitedToken("String", '"', "[^\"\n]*" r, "invalid string literal", "unclosed string literal")
 
   def apply =
-    new LexicalAnalyzer(4, symbols, delimiters, keywords, "End_of_input", identifiers, integers, characters, strings)
+    new LexicalAnalyzer(4, symbols, keywords, "End_of_input", identifiers, integers, characters, strings)
 
   abstract class Token
   case class StartRestToken(name: String, start: Set[Char], rest: Set[Char])                       extends Token
@@ -68,7 +63,6 @@ object LexicalAnalyzer {
 
 class LexicalAnalyzer(tabs: Int,
                       symbols: Map[String, String],
-                      delimiters: Map[Char, String],
                       keywords: Map[String, String],
                       endOfInput: String,
                       identifier: LexicalAnalyzer.Token,
@@ -76,14 +70,10 @@ class LexicalAnalyzer(tabs: Int,
 
   import LexicalAnalyzer._
 
-  private val tokenDelimiters =
-    tokens flatMap {
-      case DelimitedToken(_, d, _, _, _) => List(d)
-      case _                             => Nil
-    } toSet
-
-  private var curline: Int = _
-  private var curcol: Int  = _
+  private val symbolStartChars = symbols.keys map (_.head) toSet
+  private val symbolChars      = symbols.keys flatMap (_.toList) toSet
+  private var curline: Int     = _
+  private var curcol: Int      = _
 
   def fromStdin = fromSource(Source.stdin)
 
@@ -108,12 +98,20 @@ class LexicalAnalyzer(tabs: Int,
         if (s.head.c == EOT || s.head.c == c)
           buf.toString
         else {
-          buf += s.head.c
-          s = s.tail
+          buf += getch
           until
         }
 
       until
+    }
+
+    def next = s = s.tail
+
+    def getch = {
+      val c = s.head.c
+
+      next
+      c
     }
 
     def consume(first: Char, cs: Set[Char]) = {
@@ -123,8 +121,7 @@ class LexicalAnalyzer(tabs: Int,
         if (s.head.c == EOT || !cs(s.head.c))
           buf.toString
         else {
-          buf += s.head.c
-          s = s.tail
+          buf += getch
           consume
         }
 
@@ -138,16 +135,18 @@ class LexicalAnalyzer(tabs: Int,
       if (s.head.c == EOT || s.tail.head.c == EOT)
         sys.error(s"unclosed comment ${start.at}")
       else if (s.tail.head.c != '/') {
-        s = s.tail
+        next
         comment(start)
-      } else
-        s = s.tail.tail
+      } else {
+        next
+        next
+      }
     }
 
     def recognize(t: Token): Option[(String, String)] = {
       val first = s
 
-      s = s.tail
+      next
 
       t match {
         case StartRestToken(name, start, rest) =>
@@ -176,7 +175,7 @@ class LexicalAnalyzer(tabs: Int,
             if (s.head.c != delimiter)
               sys.error(s"$unclosedError ${first.head.at}")
             else if (pattern.pattern.matcher(m).matches) {
-              s = s.tail
+              next
               Some((name, s"$delimiter$m$delimiter"))
             } else
               sys.error(s"$patternError ${s.head.at}")
@@ -192,53 +191,44 @@ class LexicalAnalyzer(tabs: Int,
         token(endOfInput, s.head)
       else {
         if (s.head.c.isWhitespace)
-          s = s.tail
+          next
         else if (s.head.c == '/' && s.tail.head.c == '*')
           comment(s.head)
-        else
-          delimiters get s.head.c match {
-            case Some(name) =>
-              token(name, s.head)
-              s = s.tail
+        else if (symbolStartChars(s.head.c)) {
+          val first = s.head
+          val buf   = new StringBuilder
+
+          while (!symbols.contains(buf.toString) && s.head.c != EOT && symbolChars(s.head.c)) buf += getch
+
+          while (symbols.contains(buf.toString :+ s.head.c) && s.head.c != EOT && symbolChars(s.head.c)) buf += getch
+
+          symbols get buf.toString match {
+            case Some(name) => token(name, first)
+            case None       => sys.error(s"unrecognized symbol: '${buf.toString}' ${first.at}")
+          }
+        } else {
+          val first = s.head
+
+          recognize(identifier) match {
             case None =>
-              if (SYMBOL(s.head.c) && !tokenDelimiters.contains(s.head.c)) {
-                val first = s.head
-                val buf   = new StringBuilder
+              find(0)
 
-                while (s.head.c != EOT && !delimiters.contains(s.head.c) && !tokenDelimiters.contains(s.head.c) &&
-                       SYMBOL(s.head.c)) {
-                  buf += s.head.c
-                  s = s.tail
-                }
-
-                symbols get buf.toString match {
-                  case Some(name) => token(name, first)
-                  case None       => sys.error(s"unrecognized symbol: '${buf.toString}' ${first.at}")
-                }
-              } else {
-                val first = s.head
-
-                recognize(identifier) match {
-                  case None =>
-                    find(0)
-
-                    @scala.annotation.tailrec
-                    def find(t: Int): Unit =
-                      if (t == tokens.length)
-                        sys.error(s"unrecognized character ${first.at}")
-                      else
-                        recognize(tokens(t)) match {
-                          case None            => find(t + 1)
-                          case Some((name, v)) => value(name, v, first)
-                        }
-                  case Some((name, ident)) =>
-                    keywords get ident match {
-                      case None          => value(name, ident, first)
-                      case Some(keyword) => token(keyword, first)
-                    }
-                }
+              @scala.annotation.tailrec
+              def find(t: Int): Unit =
+                if (t == tokens.length)
+                  sys.error(s"unrecognized character ${first.at}")
+                else
+                  recognize(tokens(t)) match {
+                    case None            => find(t + 1)
+                    case Some((name, v)) => value(name, v, first)
+                  }
+            case Some((name, ident)) =>
+              keywords get ident match {
+                case None          => value(name, ident, first)
+                case Some(keyword) => token(keyword, first)
               }
           }
+        }
 
         tokenize
       }
