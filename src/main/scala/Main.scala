@@ -48,15 +48,18 @@ object Main extends App {
       else if (options.gen)
         CodeGenerator.fromStdin
       else if (options.run && options.source)
-        VirtualMachine
-          .fromString(
-            capture(CodeGenerator.fromString(
+        time(
+          VirtualMachine
+            .fromString(capture(CodeGenerator.fromString(
               capture(SyntaxAnalyzer.apply.fromString(capture(LexicalAnalyzer.apply.fromStdin))))))
-          .run
+            .run)
       else if (options.run)
-        VirtualMachine.fromStdin.run
+        time(VirtualMachine.fromStdin.run)
       else if (options.interp && options.source || !options.interp && !options.source)
-        ASTInterpreter.fromString(capture(SyntaxAnalyzer.apply.fromString(capture(LexicalAnalyzer.apply.fromStdin))))
+        time(
+          ASTInterpreter.fromString(capture(SyntaxAnalyzer.apply.fromString(capture(LexicalAnalyzer.apply.fromStdin)))))
+      else if (options.interp)
+        time(ASTInterpreter.fromStdin)
       else if (options.source) {
         optionsParser.showUsageAsError
         optionsParser.reportError("-s should be used with one of the compiler stage options")
@@ -64,4 +67,10 @@ object Main extends App {
     case None => sys.exit(1)
   }
 
+  def time(block: => Unit) = {
+    val start = System.currentTimeMillis
+
+    block
+    println(f"\nCompleted in ${(System.currentTimeMillis - start) / 1000.0}%.3fs")
+  }
 }
