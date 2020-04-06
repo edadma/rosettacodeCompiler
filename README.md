@@ -74,6 +74,40 @@ You should see
 
 If you don't, there's a problem.
 
+The app always reads from standard input and writes to standard output. You can see the output from the code generator, for example by running
+
+    ./r* -s -g
+    
+and then entering (the app is waiting for input)
+
+    print(3+4*5);
+    
+followed by a [Ctrl-D]. You should see
+
+    Datasize: 0 Strings: 0
+       0 push  3
+       5 push  4
+      10 push  5
+      15 mul
+      16 add
+      17 prti
+      18 halt
+
+To go ahead and run this simple program, type
+
+    ./r*
+    
+and then re-entering
+
+    print(3+4*5);
+    
+followed by a [Ctrl-D]. You should see
+
+    23
+    Completed in 9.574s
+
+The large completion time includes the time it took to enter the `print` command.
+
 Samples
 --------
 
