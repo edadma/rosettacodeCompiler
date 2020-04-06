@@ -29,11 +29,9 @@ Building
 
 Clone and test by typing:
 
-```bash
-git clone https://github.com/edadma/rosettacodeCompiler.git
-cd rosettacodeCompiler
-sbt test
-```
+    git clone https://github.com/edadma/rosettacodeCompiler.git
+    cd rosettacodeCompiler
+    sbt test
 
 You should see a line of output that says
 
@@ -43,9 +41,7 @@ If you don't or if the number after `Failed` isn't 0, there's a problem.
 
 Build an executable with
 
-```bash
-sbt nativeLink
-```
+    sbt nativeLink
 
 Usage
 -----
