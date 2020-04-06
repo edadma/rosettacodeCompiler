@@ -30,7 +30,7 @@ Building
 Clone and test by typing:
 
 ```bash
-git clone 
+git clone https://github.com/edadma/rosettacodeCompiler.git
 cd rosettacodeCompiler
 sbt test
 ```
