@@ -3,11 +3,12 @@ package xyz.hyperreal.rosettacodeCompiler
 object Main extends App {
 
   case class Options(
+      source: Boolean = false,
       lexer: Boolean = false,
       parser: Boolean = false,
-      run: Boolean = false,
+      interp: Boolean = false,
       gen: Boolean = false,
-      source: Boolean = false
+      run: Boolean = false
   )
 
   private val optionsParser = new scopt.OptionParser[Options]("rosettacodeCompiler") {
@@ -17,7 +18,7 @@ object Main extends App {
       .text("run code generator (only unless -s is used)")
     help("help").text("print this usage text").abbr("h")
     opt[Unit]('i', "interp")
-      .action((_, c) => c.copy(gen = true))
+      .action((_, c) => c.copy(interp = true))
       .text("run interpreter (only unless -s is used)")
     opt[Unit]('l', "lexer")
       .action((_, c) => c.copy(lexer = true))
@@ -54,11 +55,12 @@ object Main extends App {
           .run
       else if (options.run)
         VirtualMachine.fromStdin.run
+      else if (options.interp && options.source || !options.interp && !options.source)
+        ASTInterpreter.fromString(capture(SyntaxAnalyzer.apply.fromString(capture(LexicalAnalyzer.apply.fromStdin))))
       else if (options.source) {
         optionsParser.showUsageAsError
-        optionsParser.reportError("-s should be used with another option")
-      } else
-        ASTInterpreter.fromString(capture(SyntaxAnalyzer.apply.fromString(capture(LexicalAnalyzer.apply.fromStdin))))
+        optionsParser.reportError("-s should be used with one of the compiler stage options")
+      }
     case None => sys.exit(1)
   }
 
